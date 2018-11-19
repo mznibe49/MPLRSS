@@ -50,7 +50,6 @@ public class LecteurItem extends ListActivity implements LoaderManager.LoaderCal
                 layout);
 
         setListAdapter(adapter);
-
         manager = getLoaderManager(); //manager = getLoaderManager();
         manager.initLoader(0, null, this);
     }

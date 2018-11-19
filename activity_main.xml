@@ -43,6 +43,13 @@
             android:id="@+id/afficher"
             android:onClick="afficherBase" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Supprimer de la base de données"
+            android:id="@+id/supp"
+            android:onClick="suppFicRss" />
+
     </LinearLayout>
 
 

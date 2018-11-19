@@ -110,11 +110,6 @@ public class AccessDonnees {
         String selection="lien = ?";
         String [] args = {lien};
          Cursor cursor = null;
-        //try {
-        //Cursor cursor = resolver.query(uri, null, selection, args, null);
-       /*} catch (Exception e){
-            Log.d("EXCP","IN GETITEMS");
-        }*/
         try {
             //String selection="adresse = ?";
             //String [] args = {lien};
@@ -132,6 +127,30 @@ public class AccessDonnees {
         }
 
         return cursor;
+    }
+
+    boolean isExistingLink(String lien){
+        Uri.Builder builder = new Uri.Builder();
+        //String arg = cursor.getString(cursor.getColumnIndex("lien"));
+        Log.d("Lien in EXISTINGLING",""+lien);
+        builder.scheme("content").authority(authority).appendPath("lienInfo").appendPath(lien);
+        Uri uri = builder.build();
+        String selection="lien = ?";
+        String[] args={lien};
+        Cursor cursor = resolver.query(uri, null, selection, args,null);
+        if(cursor != null && cursor.getCount()==1 ) return true;
+        return false;
+    }
+
+    public int delete(Cursor cursor){
+        Uri.Builder builder = new Uri.Builder();
+        String arg = cursor.getString(cursor.getColumnIndex("lien"));
+        builder.scheme("content").authority(authority).appendPath("supprimeFic").appendPath(arg);
+        Uri uri = builder.build();
+        String where="lien = ?";
+        String[] selection={arg};
+        int cpt = resolver.delete(uri,where,selection);
+        return cpt;
     }
 
 

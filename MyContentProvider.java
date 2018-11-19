@@ -17,8 +17,9 @@ public class MyContentProvider extends ContentProvider {
 
     private static final int BASE_FIC_RSS = 1;
     private static final int BASE_ITEM = 2;
-
     private static final int LIGNE_ITEM = 4;
+    private static final int SUPP_FIC = 5;
+    private static final int LIEN_INFO = 6;
 
 
     private static final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -27,7 +28,8 @@ public class MyContentProvider extends ContentProvider {
         matcher.addURI(authority, "fic_rss", BASE_FIC_RSS); // list de tout les fichier
         matcher.addURI(authority, "item", BASE_ITEM); // list de tout les item (useless)
         matcher.addURI(authority,"itemRss/*",LIGNE_ITEM); // un bloc de ligne de la table item
-
+        matcher.addURI(authority,"supprimeFic/*",SUPP_FIC);
+        matcher.addURI(authority,"lienInfo/*",LIEN_INFO);
     }
 
 
@@ -37,7 +39,17 @@ public class MyContentProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented IN DELETE");
+        int cpt = 0;
+        int cpt2 = 0;
+        SQLiteDatabase db= base.getReadableDatabase();
+        int code = matcher.match(uri);
+        switch (code){
+            case SUPP_FIC:
+                cpt = db.delete("fic_rss", selection, selectionArgs);
+                cpt2 = db.delete("item",selection,selectionArgs);
+                Log.d("LES CPT : ",""+cpt+" "+cpt2);
+        }
+        return cpt;
     }
 
     @Override
@@ -97,8 +109,11 @@ public class MyContentProvider extends ContentProvider {
             case LIGNE_ITEM: // plusieurs lignes de  de fic_rss sous condition
                 cursor = db.query("item",colonne,selection,selectionArgs,null,null,sortOrder);
                 break;
+            case LIEN_INFO:
+                cursor = db.query("fic_rss",colonne,selection,selectionArgs,null,null,sortOrder);
+                break;
             default:
-                throw new UnsupportedOperationException("Not yet implemented in QUERY");
+                return null;
         }
         return cursor;
     }
