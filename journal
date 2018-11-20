@@ -5,3 +5,4 @@ manque l'ajout de la suppression des fic rss quand ils arrivent a un certains no
 beug a fixé ( http://www.lefigaro.fr/rss/figaro_flash-actu.xml ) *ce lien est bizzarement illisible a revoir
 gerer les balises dans les noeuds dans le parseur du type "<desc>bla</br><img ..></desc> ici on veut juste garder "bla" dans desc
 a encore tester l'appli..
+ajouter la fonction pour annuler le telechargement (s il reste du temps..)
