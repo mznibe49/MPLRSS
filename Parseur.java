@@ -1,9 +1,6 @@
 package com.example.simoz.mplrss;
 
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -20,24 +17,38 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class Parseur extends AppCompatActivity {
+public class Parseur  {
 
-    String file_name;
-    String url_lien;
-    AccessDonnees ac;
+    private String file_name;
+    private String url_lien;
+    private AccessDonnees ac;
+
+    private ArrayList<Node> efr; // element fichier rss
+    private ArrayList<Node> eti; // element item
+
+
 
     public Parseur(String fn, String ul, AccessDonnees ac) {
         this.file_name = fn;
         this.url_lien = ul;
         this.ac = ac;
-        //createDocument(fn);
+        efr = new ArrayList<Node>();
+        eti = new ArrayList<Node>();
     }
 
-    void lunch(){
-        createDocument(this.file_name);
+    ArrayList<Node> getFicRssListNode(){
+        return this.efr;
     }
 
-    void createDocument(String path){
+    ArrayList<Node> getItemListNode(){
+        return this.eti;
+    }
+
+    boolean lunch(){
+        return createDocument(this.file_name);
+    }
+
+    boolean createDocument(String path){
         //String path = path_file.replace("file://","");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = null;
@@ -47,7 +58,7 @@ public class Parseur extends AppCompatActivity {
             db = dbf.newDocumentBuilder();
             document = db.parse(new File(path));
             Log.e("IN DOC TRY", "enfin !");
-            parseDocument(document);
+            return parseDocument(document);
         } catch (DOMException e){
             Log.d("DOCEXP in createDoc : ",e.getMessage());
         } catch (IOException e){
@@ -57,9 +68,10 @@ public class Parseur extends AppCompatActivity {
         } catch (ParserConfigurationException e){
             Log.d("PARSER in createDoc : ",e.getMessage());
         }
+        return false;
     }
 
-    void parseDocument(Document document){
+    boolean parseDocument(Document document){
         Element racine = document.getDocumentElement();
 
         NodeList racineNoeuds = null;//racine.getChildNodes();
@@ -67,9 +79,6 @@ public class Parseur extends AppCompatActivity {
             racineNoeuds = racine.getChildNodes();
         } catch (Exception e){
             Log.d("ERR in ParseDoc"," :s :s ");
-                    /*int duration = Toast.LENGTH_SHORT;
-                    Toast toast = Toast.makeText(MainActivity.this, "Votre Url est invalide", duration);
-                    toast.show();*/
         }
         String racine_name = racine.getNodeName();
         Log.d("Racine name : ",racine_name);
@@ -87,9 +96,6 @@ public class Parseur extends AppCompatActivity {
             NodeList fils = node.getChildNodes(); // les balises dans channel
             int nb_fils = fils.getLength();
 
-            ArrayList<Node> efr = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table fic_rss
-            ArrayList<Node> eti = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table item
-
             boolean first_item_found = false;
             for (int j = 0; j < nb_fils; j++) {
                 if (fils.item(j).getNodeType() == Node.ELEMENT_NODE) {
@@ -103,32 +109,9 @@ public class Parseur extends AppCompatActivity {
                     else eti.add(node1);
                 }
             }
-
-            boolean existe = this.ac.isExistingLink(this.url_lien);
-            Log.d("Ce lien existe ? ", "" + existe);
-            if (existe) {
-                Intent intent = new Intent(this, LecteurItem.class);
-                intent.putExtra("lien", this.url_lien);
-                startActivity(intent);
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(this, "Ce fic est deja dans la base !", duration);
-                toast.show();
-            } else {
-                ajouterDansFicRss(efr); // ajoute les element de la liste dans chaque table
-                ajouterDansItem(eti);
-                Intent intent = new Intent(this, LecteurItem.class);
-                intent.putExtra("lien", this.url_lien);
-                startActivity(intent);
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(this, "Votre fic est bien enregistré dans la base !", duration);
-                toast.show();
-            }
-        } else {
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(this, "Votre Url est invalide IN PARSE DOC", duration);
-            toast.show();
+            return true;
         }
-
+        return false;
     }
 
     void ajouterDansFicRss(ArrayList<Node> list){
@@ -175,7 +158,6 @@ public class Parseur extends AppCompatActivity {
         //String lien
 
         for(int i = 0; i<list.size(); i++){
-            //if(fils.item(j).getNodeType() == Node.ELEMENT_NODE) {
 
             NodeList list_node = list.get(i).getChildNodes(); // chaque item a une liste d autre element
             //Log.d("nbr balise dans item : ",""+list_node.getLength());

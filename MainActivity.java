@@ -52,13 +52,9 @@ public class MainActivity extends AppCompatActivity {
     EditText url;
     AccessDonnees access_donnees;
 
-    //private long id_url;
     private DownloadManager dm;
     private String path_file="";
     private ProgressBar pb;
-    private int progressStatus = 0;
-    private Handler handler = new Handler();
-    //long downloadReference;
 
 
     @Override
@@ -74,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
         pb = (ProgressBar) findViewById(R.id.simpleProgressBar); // initiate the progress bar
 
     }
-
-    //long downloadDate(String )
 
     void valider(View button){
         String lien = this.url.getText().toString();
@@ -133,52 +127,10 @@ public class MainActivity extends AppCompatActivity {
                                         pb.setProgress((int) dl_progress);
                                     }
                                 });
-
                             }
-
                         }
                     };
                     progBar.start();
-
-
-
-                    /*Thread progBar = new Thread(){
-                        public void run(){
-                            while (id > 0) {
-                                try {
-                                    Thread.sleep(300);
-                                    Cursor cursor = dm.query(query);
-                                    if (cursor.moveToFirst()) {
-
-                                        //get total bytes of the file
-                                        if (totalBytes <= 0) {
-                                            totalBytes = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                                        }
-
-                                        final int bytesDownloadedSoFar = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-
-                                        if (bytesDownloadedSoFar == totalBytes && totalBytes > 0) {
-                                            this.interrupt();
-                                        } else {
-                                            //update progress bar
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    progressBar.setProgress(progressBar.getProgress() + (bytesDownloadedSoFar - lastBytesDownloadedSoFar));
-                                                    lastBytesDownloadedSoFar = bytesDownloadedSoFar;
-                                                }
-                                            });
-                                        }
-
-                                    }
-                                    cursor.close();
-                                } catch (Exception e) {
-                                    return;
-                                }
-                            }
-                        }
-                    };
-                    progBar.start();*/
                     checkLink(id);
                 } else {
                     int duration = Toast.LENGTH_SHORT;
@@ -227,180 +179,33 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
                                 return;
                             }
-                            //Object mListener;
                             Log.d("PATH !!! : ", path);
                             MainActivity.this.path_file = path.replace("file://", "");
-                            createDocument(MainActivity.this.path_file);
-                            //ArrayList<Node> ficRssNode = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table fic_rss
-                            //ArrayList<Node> itemNode = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table item
 
-                            //Parseur parseur = new Parseur(MainActivity.this.path_file,this.url_lien,MainActivity.this.access_donnees);
-                            //parseur.lunch();
-                            //parseur.createDocument();
-                            //mListener.onFragmentInteraction(path);
-                        }
-                    }
-
-                }
-            }
-
-            void createDocument(String path){
-                //String path = path_file.replace("file://","");
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = null;
-                Document document = null;
-                Log.e("real path is : ", path);
-                try {
-                    db = dbf.newDocumentBuilder();
-                    document = db.parse(new File(path));
-                    Log.e("IN DOC TRY", "enfin !");
-                    parseDocument(document);
-                } catch (Exception e){
-                    Log.d("Err in createDoc : ",e.getMessage());
-                }
-            }
-
-            void parseDocument(Document document){
-                Element racine = document.getDocumentElement();
-
-                NodeList racineNoeuds = null;//racine.getChildNodes();
-                try{
-                    racineNoeuds = racine.getChildNodes();
-                } catch (Exception e){
-                    Log.d("ERR in ParseDoc"," :s :s ");
-                }
-                String racine_name = racine.getNodeName();
-                Log.d("Racine name : ",racine_name);
-                if(racine_name.equals("rss")) {
-                    // if ( le fichier est un fichier rss apres le parcours des elements !!
-                    int nbRacineNoeuds = racineNoeuds.getLength();
-
-                    Node node = null; // channel la premiere balise apres rss
-                    for (int i = 0; i < nbRacineNoeuds; i++) {
-                        if (racineNoeuds.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                            node = racineNoeuds.item(i);
-                            //Log.d("Channel ? ",node.getNodeName());
-                        }
-                    }
-                    NodeList fils = node.getChildNodes(); // les balises dans channel
-                    int nb_fils = fils.getLength();
-
-                    ArrayList<Node> efr = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table fic_rss
-                    ArrayList<Node> eti = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table item
-
-                    boolean first_item_found = false;
-                    for (int j = 0; j < nb_fils; j++) {
-                        if (fils.item(j).getNodeType() == Node.ELEMENT_NODE) {
-                            final Node node1 = fils.item(j);
-                            //Log.d("Node : ", node1.getNodeName());
-                            String node1_name = node1.getNodeName(); // on cherche le nom du fils
-                            if (node1_name.equals("item")) first_item_found = true;
-                            if (!first_item_found) efr.add(node1);
-                            else eti.add(node1);
-                        }
-                    }
-
-                    boolean existe = MainActivity.this.access_donnees.isExistingLink(this.url_lien);
-                    Log.d("Ce lien existe ? ", "" + existe);
-                    if (existe) {
-                        Intent intent = new Intent(MainActivity.this, LecteurItem.class);
-                        intent.putExtra("lien", this.url_lien);
-                        startActivity(intent);
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(MainActivity.this, "Ce fic est deja dans la base !", duration);
-                        toast.show();
-                    } else {
-                        ajouterDansFicRss(efr); // ajoute les element de la liste dans chaque table
-                        ajouterDansItem(eti);
-                        Intent intent = new Intent(MainActivity.this, LecteurItem.class);
-                        intent.putExtra("lien", this.url_lien);
-                        startActivity(intent);
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(MainActivity.this, "Votre fic est bien enregistré dans la base !", duration);
-                        toast.show();
-                    }
-                } else {
-                    int duration = Toast.LENGTH_SHORT;
-                    Toast toast = Toast.makeText(MainActivity.this, "Votre Url est invalide IN PARSE DOC", duration);
-                    toast.show();
-                }
-
-            }
-
-            void ajouterDansFicRss(ArrayList<Node> list){
-
-                String lien = "";
-                String titre = "";
-                String desc = "";
-                String dm = ""; // date pub ou date de changement
-
-                for(int i = 0; i<list.size(); i++){
-                    Node node = list.get(i);
-                    Element element = (Element) node;
-                    String node_name = node.getNodeName();
-                    String contenu_node = element.getTextContent();
-                    switch (node_name){
-                        case "title":
-                            titre = contenu_node;
-                            break;
-                        case "description":
-                            desc = contenu_node;
-                            break;
-                        case "link":
-                            lien = this.url_lien;
-                            break;
-                        case "pubDate":
-                            dm = contenu_node;
-                            break;
-                        case "lastBuildDate":
-                            dm = contenu_node;
-                            break;
-                    }
-                }
-                MainActivity.this.access_donnees.ajoutRss(lien,titre,desc,dm);
-
-            }
-
-            void ajouterDansItem(ArrayList<Node> list){
-
-                String adresse = "";
-                String titre = "";
-                String desc = "";
-                String dm = ""; // date pub ou date de changement
-                Log.d("Nbr d'item : ",""+list.size());
-                //String lien
-
-                for(int i = 0; i<list.size(); i++){
-                    //if(fils.item(j).getNodeType() == Node.ELEMENT_NODE) {
-
-                    NodeList list_node = list.get(i).getChildNodes(); // chaque item a une liste d autre element
-                    //Log.d("nbr balise dans item : ",""+list_node.getLength());
-                    for(int j = 0; j<list_node.getLength();j++){
-                        Node node = list_node.item(j);
-                        if(node.getNodeType() == Node.ELEMENT_NODE) {
-                            Element element = (Element) node;
-                            String node_name = node.getNodeName();
-                            String contenu_node = element.getTextContent();
-                            switch (node_name) {
-                                case "title":
-                                    titre = contenu_node;
-                                    break;
-                                case "description":
-                                    desc = contenu_node;
-                                    break;
-                                case "link":
-                                    adresse = contenu_node;
-                                    break;
-                                case "pubDate":
-                                    dm = contenu_node;
-                                    break;
-                                case "lastBuildDate":
-                                    dm = contenu_node;
-                                    break;
+                            Parseur parseur = new Parseur(MainActivity.this.path_file,this.url_lien,MainActivity.this.access_donnees);
+                            boolean bienParser = parseur.lunch();
+                            if(bienParser){
+                                ArrayList<Node> ficRssNode = parseur.getFicRssListNode();
+                                ArrayList<Node> itemNode = parseur.getItemListNode();
+                                boolean existe = MainActivity.this.access_donnees.isExistingLink(this.url_lien); // si notre url existe on ouvre sin on enregistre puis on ouvre
+                                if (existe) {
+                                    Intent i = new Intent(MainActivity.this, LecteurItem.class);
+                                    i.putExtra("lien", this.url_lien);
+                                    startActivity(i);
+                                    Toast.makeText(MainActivity.this, "Ce fic est deja dans la base !", Toast.LENGTH_LONG).show();
+                                } else {
+                                    parseur.ajouterDansFicRss(ficRssNode); // ajoute les element de la liste dans chaque table
+                                    parseur.ajouterDansItem(itemNode);
+                                    Intent i = new Intent(MainActivity.this, LecteurItem.class);
+                                    i.putExtra("lien", this.url_lien);
+                                    startActivity(i);
+                                    Toast.makeText(MainActivity.this, "Votre fic est bien enregistré dans la base !", Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
                             }
                         }
                     }
-                    MainActivity.this.access_donnees.ajoutItem(this.url_lien,adresse,titre,desc,dm);
                 }
             }
 
