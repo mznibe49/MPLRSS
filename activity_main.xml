@@ -17,10 +17,17 @@
         android:layout_height="wrap_content">
 
 
+
         <EditText
                 android:id="@+id/url"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
+
+        <ProgressBar
+            android:id="@+id/simpleProgressBar"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
 
         <Button
                 android:id="@+id/valider"

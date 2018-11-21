@@ -7,7 +7,7 @@ gerer les balises dans les noeuds dans le parseur du type "<desc>bla</br><img ..
 a encore tester l'appli..
 ajouter la fonction pour annuler le telechargement (s il reste du temps..)
 verifier la date de pub ou de changement et mettre a jour le fichier
-
+mettre le parseur dans une class a part :/
 
 ProgressBar done !
 Projet en Doc fait

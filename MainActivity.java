@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.w3c.dom.Document;
@@ -53,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
     //private long id_url;
     private DownloadManager dm;
     private String path_file="";
+    private ProgressBar pb;
+    private int progressStatus = 0;
+    private Handler handler = new Handler();
     //long downloadReference;
 
 
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         valider = (Button) findViewById(R.id.valider);
         url = (EditText) findViewById(R.id.url);
         supp = (Button) findViewById(R.id.supp);
+        pb = (ProgressBar) findViewById(R.id.simpleProgressBar); // initiate the progress bar
 
     }
 
@@ -87,11 +93,8 @@ public class MainActivity extends AppCompatActivity {
             boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
             if (isConnected) {
-                //downloadAdresse();
                 String lien_directe = url.getText().toString();//"https://www.lemonde.fr/festival-de-cannes/rss_full.xml"; // on le change avec le edit texte apres
-                //boolean lien_Valide = lienValide(lien_directe);
                 Uri uri = Uri.parse(lien_directe);
-
                 URL url = null; //new URL(lien_directe) ;
                 boolean url_valide = true;
                 try {
@@ -100,20 +103,82 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("IN URL CATCH"," :/");
                     url_valide = false;
                 }
-                //URLConnection mycon = url.openConnection();
 
-                //if (myCon.getContentLength == -1) ;
-                //System.out.println("le fichier n'existe pas") ;
                 if(url_valide) {
+
                     this.dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                     DownloadManager.Request req = new DownloadManager.Request(uri);
-
                     req.setDescription("Android Data download using DownloadManager.");
-
                     req.setDestinationInExternalFilesDir(MainActivity.this,
                             Environment.DIRECTORY_DOWNLOADS, uri.getLastPathSegment()); // pour recup le nom du fic
 
-                    long id = this.dm.enqueue(req);
+                    final long id = this.dm.enqueue(req);
+
+                    Thread progBar = new Thread(){
+                        public void run(){
+                            boolean downloading = true;
+                            while(downloading){
+                                DownloadManager.Query q = new DownloadManager.Query();
+                                q.setFilterById(id);
+                                Cursor cursor = MainActivity.this.dm.query(q);
+                                cursor.moveToFirst();
+                                final int bytes_downloaded = cursor.getInt(cursor
+                                        .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                final int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) downloading = false;
+                                final int dl_progress = ( bytes_total > 0 ? (int) ((bytes_downloaded * 100L) / bytes_total) : 0 );
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        pb.setProgress((int) dl_progress);
+                                    }
+                                });
+
+                            }
+
+                        }
+                    };
+                    progBar.start();
+
+
+
+                    /*Thread progBar = new Thread(){
+                        public void run(){
+                            while (id > 0) {
+                                try {
+                                    Thread.sleep(300);
+                                    Cursor cursor = dm.query(query);
+                                    if (cursor.moveToFirst()) {
+
+                                        //get total bytes of the file
+                                        if (totalBytes <= 0) {
+                                            totalBytes = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                        }
+
+                                        final int bytesDownloadedSoFar = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+
+                                        if (bytesDownloadedSoFar == totalBytes && totalBytes > 0) {
+                                            this.interrupt();
+                                        } else {
+                                            //update progress bar
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    progressBar.setProgress(progressBar.getProgress() + (bytesDownloadedSoFar - lastBytesDownloadedSoFar));
+                                                    lastBytesDownloadedSoFar = bytesDownloadedSoFar;
+                                                }
+                                            });
+                                        }
+
+                                    }
+                                    cursor.close();
+                                } catch (Exception e) {
+                                    return;
+                                }
+                            }
+                        }
+                    };
+                    progBar.start();*/
                     checkLink(id);
                 } else {
                     int duration = Toast.LENGTH_SHORT;
@@ -131,7 +196,9 @@ public class MainActivity extends AppCompatActivity {
 
     void checkLink(final long id){
         Log.d("MSG1","OUT BCR");
+
         IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+
         BroadcastReceiver receiver = new BroadcastReceiver() {
 
             private String url_lien=""; // qui content http://www... recuperer depuis le fichier
@@ -139,30 +206,41 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
             // récupérer la référence du téléchargement
-                Log.d("MSG2","IN BCR");
-                long ref = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (id == ref) {
-                // si OK alors plus besoin de BroadcastReceiver
-                    MainActivity.this.unregisterReceiver(this);
-                    DownloadManager.Query query = new DownloadManager.Query();
-                    query.setFilterById(id);
-                    Cursor cursor = dm.query(query);
-                    if (cursor.moveToFirst()) {
-                        String path = cursor.getString(cursor
-                                .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                String action = intent.getAction();
+                if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
 
-                        this.url_lien =  cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_URI));
-                        Log.d("URL_LIEN ",this.url_lien);
-                        if(path==null){
-                            Toast.makeText(MainActivity.this,"Url invalide",Toast.LENGTH_LONG).show();
-                            return;
+                    Log.d("MSG2", "IN BCR");
+                    long ref = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                    if (id == ref) {
+                        // si OK alors plus besoin de BroadcastReceiver
+                        MainActivity.this.unregisterReceiver(this);
+                        DownloadManager.Query query = new DownloadManager.Query();
+                        query.setFilterById(id);
+                        Cursor cursor = dm.query(query);
+                        if (cursor.moveToFirst()) {
+                            String path = cursor.getString(cursor
+                                    .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+
+                            this.url_lien = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_URI));
+                            Log.d("URL_LIEN ", this.url_lien);
+                            if (path == null) {
+                                Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
+                                return;
+                            }
+                            //Object mListener;
+                            Log.d("PATH !!! : ", path);
+                            MainActivity.this.path_file = path.replace("file://", "");
+                            createDocument(MainActivity.this.path_file);
+                            //ArrayList<Node> ficRssNode = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table fic_rss
+                            //ArrayList<Node> itemNode = new ArrayList<Node>(); // node contenant les elements a ajouter dans la table item
+
+                            //Parseur parseur = new Parseur(MainActivity.this.path_file,this.url_lien,MainActivity.this.access_donnees);
+                            //parseur.lunch();
+                            //parseur.createDocument();
+                            //mListener.onFragmentInteraction(path);
                         }
-                        //Object mListener;
-                        Log.d("PATH !!! : ",path);
-                        MainActivity.this.path_file = path.replace("file://","");
-                        createDocument(MainActivity.this.path_file);
-                        //mListener.onFragmentInteraction(path);
                     }
+
                 }
             }
 
@@ -190,9 +268,6 @@ public class MainActivity extends AppCompatActivity {
                     racineNoeuds = racine.getChildNodes();
                 } catch (Exception e){
                     Log.d("ERR in ParseDoc"," :s :s ");
-                    /*int duration = Toast.LENGTH_SHORT;
-                    Toast toast = Toast.makeText(MainActivity.this, "Votre Url est invalide", duration);
-                    toast.show();*/
                 }
                 String racine_name = racine.getNodeName();
                 Log.d("Racine name : ",racine_name);
@@ -219,9 +294,7 @@ public class MainActivity extends AppCompatActivity {
                             final Node node1 = fils.item(j);
                             //Log.d("Node : ", node1.getNodeName());
                             String node1_name = node1.getNodeName(); // on cherche le nom du fils
-
                             if (node1_name.equals("item")) first_item_found = true;
-
                             if (!first_item_found) efr.add(node1);
                             else eti.add(node1);
                         }
@@ -251,16 +324,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast toast = Toast.makeText(MainActivity.this, "Votre Url est invalide IN PARSE DOC", duration);
                     toast.show();
                 }
-                //Log.d("EFR ET ETI SIZE",""+efr.size()+" "+eti.size());
-                /*ajouterDansFicRss(efr); // ajoute les element de la liste dans chaque table
-                //Log.d("Middle","btween adds");
-                ajouterDansItem(eti);
-                // on ouvre directement la liste des items du liens entré
-                Intent intent = new Intent(MainActivity.this,LecteurItem.class);
-                intent.putExtra("lien",this.link_in_rss_file);
-                startActivity(intent);*/
-                //Log.d("END","after adds");
-                //Log.d("Fin ajout"," fiuuw !");
+
             }
 
             void ajouterDansFicRss(ArrayList<Node> list){
