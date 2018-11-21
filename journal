@@ -1,9 +1,12 @@
 manque fragement sur le projet (nouvelle version du projet..)
-manque progresse bar (izi)
+manque progresse bar (izi)   X
 manque des modification sur la base de données ( enlever des champs qui servent a rien dans la table fic_rss, ajouter des champs pour la sauvgarde d'un article)
 manque l'ajout de la suppression des fic rss quand ils arrivent a un certains nombre dans la bdd
 beug a fixé ( http://www.lefigaro.fr/rss/figaro_flash-actu.xml ) *ce lien est bizzarement illisible a revoir
 gerer les balises dans les noeuds dans le parseur du type "<desc>bla</br><img ..></desc> ici on veut juste garder "bla" dans desc
 a encore tester l'appli..
 ajouter la fonction pour annuler le telechargement (s il reste du temps..)
-verifier la date et mettre a jour le fichier
+verifier la date de pub ou de changement et mettre a jour le fichier
+
+
+ProgressBar done !
