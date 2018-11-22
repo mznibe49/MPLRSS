@@ -111,8 +111,6 @@ public class AccessDonnees {
         String [] args = {lien};
          Cursor cursor = null;
         try {
-            //String selection="adresse = ?";
-            //String [] args = {lien};
             cursor = resolver.query(uri, null, selection, args,null);
             Log.d("MSG","AVANT LE WHILE");
             while (cursor.moveToNext()) {
@@ -139,10 +137,10 @@ public class AccessDonnees {
         String[] args={lien};
         Cursor cursor = resolver.query(uri, null, selection, args,null);
         if(cursor != null && cursor.getCount()==1 ) return true;
-        return false;
+        return false; // cmt je fait cursor.close ici O.o
     }
 
-    public int delete(Cursor cursor){
+    public int delete(Cursor cursor){ // delete with cursor from loader
         Uri.Builder builder = new Uri.Builder();
         String arg = cursor.getString(cursor.getColumnIndex("lien"));
         builder.scheme("content").authority(authority).appendPath("supprimeFic").appendPath(arg);
@@ -151,6 +149,30 @@ public class AccessDonnees {
         String[] selection={arg};
         int cpt = resolver.delete(uri,where,selection);
         return cpt;
+    }
+
+    public int delete(String lien){ // delete with link from bcr
+        Uri.Builder builder = new Uri.Builder();
+        //String arg = cursor.getString(cursor.getColumnIndex("lien"));
+        builder.scheme("content").authority(authority).appendPath("supprimeFic").appendPath(lien);
+        Uri uri = builder.build();
+        String where="lien = ?";
+        String[] selection={lien};
+        int cpt = resolver.delete(uri,where,selection);
+        return cpt;
+    }
+
+    public String getDateFromRss(String url){
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("content").authority(authority).appendPath("dateInfo").appendPath(url);
+        Uri uri = builder.build();
+        String where="lien = ?";
+        String[] selection={url};
+        Cursor cursor = resolver.query(uri,null,where,selection,null);
+        cursor.moveToFirst();
+        String date = cursor.getString(cursor.getColumnIndex(COLONNE_DATE_MODIF));
+        cursor.close();
+        return date;
     }
 
 

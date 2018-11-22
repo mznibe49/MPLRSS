@@ -11,7 +11,10 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -188,5 +191,41 @@ public class Parseur  {
             }
             this.ac.ajoutItem(this.url_lien,adresse,titre,desc,dm);
         }
+    }
+
+    /*
+    on prend url lien
+    on verifie s'il existe dans la base
+        on verifie la date dans la base(de cet url) et la date dans la liste des Node du fichier rss
+        si la premiere date est egale a l'ancienne
+            on va ouvrir le fichier rss
+        sin
+            on supprime l'ancien fichier rss de la base
+            on ajoute le nouveau fichier rss de la base
+            on ouvre le nouveaux fichier rss
+    sin on ajoute directement dans la base
+     */
+    // ici on verifie l'existance de l'url dans la mainAc
+    boolean checkDate(){
+        String str_node_date= "" ;
+        for(int i =0; i<efr.size();i++){
+            Node node = efr.get(i);
+            Element element = (Element) node;
+            String node_name = node.getNodeName();
+            String contenu_node = element.getTextContent();
+            if(node_name.equals("pubDate") || node_name.equals("lastBuildDate")){
+                str_node_date = contenu_node;
+            }
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        try {
+            Date nvDate = dateFormat.parse(str_node_date);
+            String ancieneDate = this.ac.getDateFromRss(this.url_lien);
+            Date ancDate = dateFormat.parse(ancieneDate);
+            if(nvDate.getTime() == ancDate.getTime()) return true;
+        } catch (ParseException e){
+            Log.e("ERR in CheckDate",e.getMessage());
+        }
+        return false;
     }
 }

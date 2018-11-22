@@ -20,6 +20,7 @@ public class MyContentProvider extends ContentProvider {
     private static final int LIGNE_ITEM = 4;
     private static final int SUPP_FIC = 5;
     private static final int LIEN_INFO = 6;
+    private static final int DATE_INFO = 7;
 
 
     private static final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -29,7 +30,8 @@ public class MyContentProvider extends ContentProvider {
         matcher.addURI(authority, "item", BASE_ITEM); // list de tout les item (useless)
         matcher.addURI(authority,"itemRss/*",LIGNE_ITEM); // un bloc de ligne de la table item
         matcher.addURI(authority,"supprimeFic/*",SUPP_FIC);
-        matcher.addURI(authority,"lienInfo/*",LIEN_INFO);
+        matcher.addURI(authority,"lienInfo/*",LIEN_INFO); // pour savoir si un lien existe ou pas
+        matcher.addURI(authority,"dateInfo/*",DATE_INFO); // pour recup la date enregistrer
     }
 
 
@@ -110,6 +112,9 @@ public class MyContentProvider extends ContentProvider {
                 cursor = db.query("item",colonne,selection,selectionArgs,null,null,sortOrder);
                 break;
             case LIEN_INFO:
+                cursor = db.query("fic_rss",colonne,selection,selectionArgs,null,null,sortOrder);
+                break;
+            case DATE_INFO:
                 cursor = db.query("fic_rss",colonne,selection,selectionArgs,null,null,sortOrder);
                 break;
             default:

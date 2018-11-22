@@ -71,6 +71,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public boolean isConnected(){
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&  activeNetwork.isAvailable() && activeNetwork.isConnected();
+        return isConnected;
+
+        //ConnectivityManager connectivity = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        /*if (connectivity != null) {
+            NetworkInfo[] info = connectivity.getAllNetworkInfo();
+            if (info != null)
+                for (int i = 0; i < info.length; i++)
+                    if (info[i].getState() == NetworkInfo.State.CONNECTED) {
+                        return true;
+                    }
+        }*/
+    }
+
     void valider(View button){
         String lien = this.url.getText().toString();
         if(lien.length() == 0){
@@ -81,11 +98,11 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
 
-            ConnectivityManager cm =
-                    (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+           /* ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-
+            boolean isConnected = activeNetwork != null &&  activeNetwork.isAvailable() && activeNetwork.isConnected();*/
+           boolean isConnected = isConnected();
+            Log.d("Est connecté ? ",""+isConnected);
             if (isConnected) {
                 String lien_directe = url.getText().toString();//"https://www.lemonde.fr/festival-de-cannes/rss_full.xml"; // on le change avec le edit texte apres
                 Uri uri = Uri.parse(lien_directe);
@@ -102,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
                     this.dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                     DownloadManager.Request req = new DownloadManager.Request(uri);
+                    //req.setTitle()
                     req.setDescription("Android Data download using DownloadManager.");
                     req.setDestinationInExternalFilesDir(MainActivity.this,
                             Environment.DIRECTORY_DOWNLOADS, uri.getLastPathSegment()); // pour recup le nom du fic
@@ -133,14 +151,11 @@ public class MainActivity extends AppCompatActivity {
                     progBar.start();
                     checkLink(id);
                 } else {
-                    int duration = Toast.LENGTH_SHORT;
-                    Toast toast = Toast.makeText(this, "Url invalide", duration);
-                    toast.show();
+                    Toast.makeText(this, "Url invalide", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(this, "No internet connexion", duration);
-                toast.show();
+                Log.d("PAS  de CO",":/");
+                Toast.makeText(this, "No internet connexion", Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -172,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                         if (cursor.moveToFirst()) {
                             String path = cursor.getString(cursor
                                     .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-
+                            // http://www.lemonde....
                             this.url_lien = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_URI));
                             Log.d("URL_LIEN ", this.url_lien);
                             if (path == null) {
@@ -188,11 +203,22 @@ public class MainActivity extends AppCompatActivity {
                                 ArrayList<Node> ficRssNode = parseur.getFicRssListNode();
                                 ArrayList<Node> itemNode = parseur.getItemListNode();
                                 boolean existe = MainActivity.this.access_donnees.isExistingLink(this.url_lien); // si notre url existe on ouvre sin on enregistre puis on ouvre
-                                if (existe) {
-                                    Intent i = new Intent(MainActivity.this, LecteurItem.class);
-                                    i.putExtra("lien", this.url_lien);
-                                    startActivity(i);
-                                    Toast.makeText(MainActivity.this, "Ce fic est deja dans la base !", Toast.LENGTH_LONG).show();
+                                if (existe) { // on change.. si ça existe (on verifie la date, si la date du site a changé on supp on reajoute, sin on fait rien), sin on rajoute directement
+                                    boolean sameTime = parseur.checkDate(); // envoie vrai si l'ancienne et la nv date son kif kif
+                                    if(sameTime){
+                                        Intent i = new Intent(MainActivity.this, LecteurItem.class);
+                                        i.putExtra("lien", this.url_lien);
+                                        startActivity(i);
+                                        Toast.makeText(MainActivity.this, "meme date des fic rss donc pas de modif", Toast.LENGTH_LONG).show();
+                                    } else { // on supp l'ancien on ajoute le nv et puis on ouvre
+                                        MainActivity.this.access_donnees.delete(this.url_lien);
+                                        parseur.ajouterDansFicRss(ficRssNode); // ajoute les element de la liste dans chaque table
+                                        parseur.ajouterDansItem(itemNode);
+                                        Intent i = new Intent(MainActivity.this, LecteurItem.class);
+                                        i.putExtra("lien", this.url_lien);
+                                        startActivity(i);
+                                        Toast.makeText(MainActivity.this, "pas la meme date => modif", Toast.LENGTH_LONG).show();
+                                    }
                                 } else {
                                     parseur.ajouterDansFicRss(ficRssNode); // ajoute les element de la liste dans chaque table
                                     parseur.ajouterDansItem(itemNode);
@@ -205,10 +231,10 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
                             }
                         }
+                        cursor.close();
                     }
                 }
             }
-
         };
         registerReceiver(receiver, filter);
     }
