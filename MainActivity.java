@@ -74,18 +74,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean isConnected(){
         ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null &&  activeNetwork.isAvailable() && activeNetwork.isConnected();
-        return isConnected;
-
-        //ConnectivityManager connectivity = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        /*if (connectivity != null) {
-            NetworkInfo[] info = connectivity.getAllNetworkInfo();
-            if (info != null)
-                for (int i = 0; i < info.length; i++)
-                    if (info[i].getState() == NetworkInfo.State.CONNECTED) {
-                        return true;
-                    }
-        }*/
+        boolean isConnected = activeNetwork != null && activeNetwork.isAvailable() && activeNetwork.isConnected();
+        return  isConnected;
+            /*boolean wifi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+            boolean mobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;*/
     }
 
     void valider(View button){
