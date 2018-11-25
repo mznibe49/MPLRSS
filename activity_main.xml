@@ -57,6 +57,13 @@
             android:id="@+id/supp"
             android:onClick="suppFicRss" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Annuler le téléchargement"
+            android:id="@+id/annuler"
+           />
+
     </LinearLayout>
 
 

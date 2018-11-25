@@ -151,6 +151,11 @@ public class Parseur  {
 
     }
 
+    public Node filtreNode(Node node){
+        NodeList list = node.getChildNodes();
+        return null;
+    }
+
     void ajouterDansItem(ArrayList<Node> list){
 
         String adresse = "";
@@ -167,6 +172,12 @@ public class Parseur  {
             for(int j = 0; j<list_node.getLength();j++){
                 Node node = list_node.item(j);
                 if(node.getNodeType() == Node.ELEMENT_NODE) {
+                    if(node.getNodeName().equals("description")){
+                        //node = filtreNode(node); // pour enlever les </br> , <img>, etc..
+                        if(node.hasChildNodes()){
+                            Log.d("First Node ",node.getFirstChild().getNodeType()+"");
+                        }
+                    }
                     Element element = (Element) node;
                     String node_name = node.getNodeName();
                     String contenu_node = element.getTextContent();
@@ -206,8 +217,10 @@ public class Parseur  {
     sin on ajoute directement dans la base
      */
     // ici on verifie l'existance de l'url dans la mainAc
+
     boolean checkDate(){
         String str_node_date= "" ;
+        String format_pattern = "";
         for(int i =0; i<efr.size();i++){
             Node node = efr.get(i);
             Element element = (Element) node;
@@ -215,13 +228,21 @@ public class Parseur  {
             String contenu_node = element.getTextContent();
             if(node_name.equals("pubDate") || node_name.equals("lastBuildDate")){
                 str_node_date = contenu_node;
+                //if(node_name.equals("pubDate")) format_pattern  = "EEE, d MMM yyyy HH:mm:ss Z";
+                //else if(node_name.equals("lastBuildDate")) format_pattern = "yyyy-MM-dd HH:mm:ss";
             }
         }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat dateFormat = null;
+        try {
+            dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+        } catch (Exception e) {
+            dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
         try {
             Date nvDate = dateFormat.parse(str_node_date);
             String ancieneDate = this.ac.getDateFromRss(this.url_lien);
             Date ancDate = dateFormat.parse(ancieneDate);
+            Log.e("Print Date ","anc date : "+ancDate.getTime()+" nv date "+nvDate.getTime());
             if(nvDate.getTime() == ancDate.getTime()) return true;
         } catch (ParseException e){
             Log.e("ERR in CheckDate",e.getMessage());

@@ -48,9 +48,11 @@ public class MainActivity extends AppCompatActivity {
     Button remplir;
     Button afficher;
     Button valider;
+    Button annuler;
     Button supp;
     EditText url;
     AccessDonnees access_donnees;
+    boolean estAnnuler = true;
 
     private DownloadManager dm;
     private String path_file="";
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         url = (EditText) findViewById(R.id.url);
         supp = (Button) findViewById(R.id.supp);
         pb = (ProgressBar) findViewById(R.id.simpleProgressBar); // initiate the progress bar
+        annuler = (Button) findViewById(R.id.annuler);
 
     }
 
@@ -76,8 +79,6 @@ public class MainActivity extends AppCompatActivity {
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isAvailable() && activeNetwork.isConnected();
         return  isConnected;
-            /*boolean wifi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
-            boolean mobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;*/
     }
 
     void valider(View button){
@@ -117,31 +118,49 @@ public class MainActivity extends AppCompatActivity {
                             Environment.DIRECTORY_DOWNLOADS, uri.getLastPathSegment()); // pour recup le nom du fic
 
                     final long id = this.dm.enqueue(req);
-
+                    //boolean estAnnuler = false;
                     Thread progBar = new Thread(){
+
+                        boolean downloading = true;
+
                         public void run(){
-                            boolean downloading = true;
                             while(downloading){
+                                MainActivity.this.estAnnuler = false;
                                 DownloadManager.Query q = new DownloadManager.Query();
                                 q.setFilterById(id);
                                 Cursor cursor = MainActivity.this.dm.query(q);
-                                cursor.moveToFirst();
-                                final int bytes_downloaded = cursor.getInt(cursor
-                                        .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                                final int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                                if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) downloading = false;
-                                final int dl_progress = ( bytes_total > 0 ? (int) ((bytes_downloaded * 100L) / bytes_total) : 0 );
+                                int bytes_total = 0,bytes_downloaded = 0;
+                                if(cursor.moveToFirst()) {
+                                     bytes_downloaded = cursor.getInt(cursor
+                                            .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                     bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                    if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                                        downloading = false;
+                                        pb.setProgress(0);
+                                    }
+                                }
+                                final int dl_progress = (bytes_total > 0 ? (int) ((bytes_downloaded * 100L) / bytes_total) : 0);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         pb.setProgress((int) dl_progress);
+                                        MainActivity.this.annuler.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                pb.setProgress(0);
+                                                MainActivity.this.dm.remove(id);
+                                                downloading = false;
+                                                MainActivity.this.estAnnuler = true;
+                                                Toast.makeText(MainActivity.this, "Téléchargement annuler", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
                                     }
                                 });
                             }
                         }
                     };
                     progBar.start();
-                    checkLink(id);
+                    if(estAnnuler == false) checkLink(id);
                 } else {
                     Toast.makeText(this, "Url invalide", Toast.LENGTH_SHORT).show();
                 }
@@ -165,8 +184,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
             // récupérer la référence du téléchargement
-                String action = intent.getAction();
-                if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+                if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) {
 
                     Log.d("MSG2", "IN BCR");
                     long ref = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
