@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
     Button supp;
     EditText url;
     AccessDonnees access_donnees;
-    boolean estAnnuler = true;
 
     private DownloadManager dm;
     private String path_file="";
@@ -91,9 +90,6 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
 
-           /* ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null &&  activeNetwork.isAvailable() && activeNetwork.isConnected();*/
            boolean isConnected = isConnected();
             Log.d("Est connecté ? ",""+isConnected);
             if (isConnected) {
@@ -112,55 +108,16 @@ public class MainActivity extends AppCompatActivity {
 
                     this.dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                     DownloadManager.Request req = new DownloadManager.Request(uri);
-                    //req.setTitle()
                     req.setDescription("Android Data download using DownloadManager.");
                     req.setDestinationInExternalFilesDir(MainActivity.this,
                             Environment.DIRECTORY_DOWNLOADS, uri.getLastPathSegment()); // pour recup le nom du fic
 
                     final long id = this.dm.enqueue(req);
-                    //boolean estAnnuler = false;
-                    Thread progBar = new Thread(){
-
-                        boolean downloading = true;
-
-                        public void run(){
-                            while(downloading){
-                                MainActivity.this.estAnnuler = false;
-                                DownloadManager.Query q = new DownloadManager.Query();
-                                q.setFilterById(id);
-                                Cursor cursor = MainActivity.this.dm.query(q);
-                                int bytes_total = 0,bytes_downloaded = 0;
-                                if(cursor.moveToFirst()) {
-                                     bytes_downloaded = cursor.getInt(cursor
-                                            .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                                     bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                                    if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
-                                        downloading = false;
-                                        pb.setProgress(0);
-                                    }
-                                }
-                                final int dl_progress = (bytes_total > 0 ? (int) ((bytes_downloaded * 100L) / bytes_total) : 0);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        pb.setProgress((int) dl_progress);
-                                        MainActivity.this.annuler.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                pb.setProgress(0);
-                                                MainActivity.this.dm.remove(id);
-                                                downloading = false;
-                                                MainActivity.this.estAnnuler = true;
-                                                Toast.makeText(MainActivity.this, "Téléchargement annuler", Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    };
-                    progBar.start();
-                    if(estAnnuler == false) checkLink(id);
+                    ProgBar progBar = new ProgBar(pb,annuler,id,dm);
+                    Thread th = new Thread(progBar);
+                    th.start();
+                    if(!progBar.getEstAnnuler()) checkLink(id);
+                    else Toast.makeText(MainActivity.this, "Téléchargement annuler", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "Url invalide", Toast.LENGTH_SHORT).show();
                 }
