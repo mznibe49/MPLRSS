@@ -52,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
     Button supp;
     EditText url;
     AccessDonnees access_donnees;
-    boolean estAnnuler = true;
+    boolean downloading = false;// = false;
+    boolean estAnnuler = false;
 
     private DownloadManager dm;
     private String path_file="";
     private ProgressBar pb;
+    Thread progBar;
 
 
     @Override
@@ -91,10 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
 
-           /* ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null &&  activeNetwork.isAvailable() && activeNetwork.isConnected();*/
-           boolean isConnected = isConnected();
+            boolean isConnected = isConnected();
             Log.d("Est connecté ? ",""+isConnected);
             if (isConnected) {
                 String lien_directe = url.getText().toString();//"https://www.lemonde.fr/festival-de-cannes/rss_full.xml"; // on le change avec le edit texte apres
@@ -118,22 +117,21 @@ public class MainActivity extends AppCompatActivity {
                             Environment.DIRECTORY_DOWNLOADS, uri.getLastPathSegment()); // pour recup le nom du fic
 
                     final long id = this.dm.enqueue(req);
-                    //boolean estAnnuler = false;
-                    Thread progBar = new Thread(){
 
-                        boolean downloading = true;
+                    progBar = new Thread(){
+
+                        DownloadManager.Query q;
 
                         public void run(){
                             while(downloading){
-                                MainActivity.this.estAnnuler = false;
-                                DownloadManager.Query q = new DownloadManager.Query();
+                                q = new DownloadManager.Query();
                                 q.setFilterById(id);
                                 Cursor cursor = MainActivity.this.dm.query(q);
                                 int bytes_total = 0,bytes_downloaded = 0;
                                 if(cursor.moveToFirst()) {
-                                     bytes_downloaded = cursor.getInt(cursor
+                                    bytes_downloaded = cursor.getInt(cursor
                                             .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                                     bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                    bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
                                     if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
                                         downloading = false;
                                         pb.setProgress(0);
@@ -143,24 +141,23 @@ public class MainActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        pb.setProgress((int) dl_progress);
-                                        MainActivity.this.annuler.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                pb.setProgress(0);
-                                                MainActivity.this.dm.remove(id);
-                                                downloading = false;
-                                                MainActivity.this.estAnnuler = true;
-                                                Toast.makeText(MainActivity.this, "Téléchargement annuler", Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
+                                        if(estAnnuler) {
+                                            Toast.makeText(MainActivity.this, "Téléchargement annuler", Toast.LENGTH_SHORT).show();
+                                            pb.setProgress(0);
+                                            estAnnuler = false;
+                                            MainActivity.this.dm.remove(id);
+                                        } else pb.setProgress((int) dl_progress);
                                     }
                                 });
                             }
                         }
                     };
                     progBar.start();
-                    if(estAnnuler == false) checkLink(id);
+                    Log.d("Est Annuler ",""+estAnnuler);
+                    if(!estAnnuler){
+                        downloading = true;
+                        checkLink(id);
+                    }
                 } else {
                     Toast.makeText(this, "Url invalide", Toast.LENGTH_SHORT).show();
                 }
@@ -183,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onReceive(Context context, Intent intent) {
-            // récupérer la référence du téléchargement
+                // récupérer la référence du téléchargement
                 if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) {
 
                     Log.d("MSG2", "IN BCR");
@@ -255,6 +252,13 @@ public class MainActivity extends AppCompatActivity {
             access_donnees.init();
         } catch (Exception e){
             Log.d("ERR",e.getMessage());
+        }
+    }
+
+    void annulerT(View b){
+        if(downloading) { // si tu annule et le telechargmnt est en cours
+            estAnnuler = true;
+            downloading = false;
         }
     }
 
