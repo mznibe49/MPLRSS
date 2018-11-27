@@ -16,3 +16,12 @@ Ajout bouton annuler telechargement qui fonctionne !
 verification de date est faite
 
 "j ai ajouter un branch pr ProgBar avec thread"
+
+ProgBar avec thread de bouton annuler fonctionne tres bien ! pas besoin de mettre dans une class apart !
+
+avant la fin : 
+	spinner (maybe) (flemme..)
+	nettoyage en base et en portable
+	fragement
+	parser les description avec <img/> et </br>
+	
