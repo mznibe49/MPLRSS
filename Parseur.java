@@ -11,6 +11,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -232,21 +233,41 @@ public class Parseur  {
                 //else if(node_name.equals("lastBuildDate")) format_pattern = "yyyy-MM-dd HH:mm:ss";
             }
         }
-        SimpleDateFormat dateFormat = null;
+        //SimpleDateFormat dateFormat = null;
+
         try {
-            dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-        } catch (Exception e) {
-            dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-        try {
-            Date nvDate = dateFormat.parse(str_node_date);
+            Date nvDate = convertirDate(str_node_date);
             String ancieneDate = this.ac.getDateFromRss(this.url_lien);
-            Date ancDate = dateFormat.parse(ancieneDate);
+            Date ancDate = convertirDate(ancieneDate);
             Log.e("Print Date ","anc date : "+ancDate.getTime()+" nv date "+nvDate.getTime());
             if(nvDate.getTime() == ancDate.getTime()) return true;
-        } catch (ParseException e){
+        } catch (Exception e){
             Log.e("ERR in CheckDate",e.getMessage());
         }
         return false;
+    }
+
+    public Date convertirDate(String date){
+        SimpleDateFormat dateFormat1 = null;
+        SimpleDateFormat dateFormat2 = null;
+        Date dateObj = null;
+        try {
+            dateFormat1 = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+            dateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            String [] tab = date.split(" ");
+            if(tab.length > 2){
+                String res = "";
+                for(int i = 1; i<tab.length-1;i++){
+                    if (i == tab.length-2) res+=tab[i];
+                    else res += tab[i]+" ";
+                }
+                dateObj = dateFormat1.parse(res);
+            } else dateObj = dateFormat2.parse(date);
+
+        } catch (Exception e) {
+            Log.e("in convDate ","try de date "+e.getMessage());
+        }
+        return dateObj;
     }
 }

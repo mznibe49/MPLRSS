@@ -29,40 +29,47 @@
             android:layout_height="wrap_content"
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
 
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
         <Button
                 android:id="@+id/valider"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:onClick="valider"
                 android:text="Valider" />
 
         <Button
             android:id="@+id/remplir"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:onClick="remplirBase"
             android:text="Remplir la base de données" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Afficher la base de données"
             android:id="@+id/afficher"
             android:onClick="afficherBase" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Supprimer de la base de données"
             android:id="@+id/supp"
             android:onClick="suppFicRss" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Annuler le téléchargement"
             android:id="@+id/annuler"
-           />
+            android:onClick="annulerT" />
+
+
 
     </LinearLayout>
 

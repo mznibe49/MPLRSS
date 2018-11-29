@@ -39,12 +39,12 @@ public class LecteurItem extends ListActivity implements LoaderManager.LoaderCal
 
         Cursor cursor = getItems(this.lien);
 
-        String [] nom_colonne = {"titre","description"}; // on suppose que qu'on on clicque sur la zone on vas sur le lien qui vas avec...
+        String [] nom_colonne = {"titre"}; // on suppose que qu'on on clicque sur la zone on vas sur le lien qui vas avec...
 
-        int [] layout = {android.R.id.text1,android.R.id.text2};
+        int [] layout = {android.R.id.text1};
 
         adapter= new SimpleCursorAdapter(this,
-                android.R.layout.two_line_list_item,
+                android.R.layout.simple_list_item_1,
                 cursor,
                 nom_colonne,
                 layout);

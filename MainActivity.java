@@ -17,9 +17,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import org.w3c.dom.Document;
@@ -43,7 +46,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import static android.app.DownloadManager.COLUMN_LOCAL_FILENAME;
 import static android.app.PendingIntent.getActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     Button remplir;
     Button afficher;
@@ -51,9 +54,10 @@ public class MainActivity extends AppCompatActivity {
     Button annuler;
     Button supp;
     EditText url;
+    Spinner spinner;
     AccessDonnees access_donnees;
-    boolean downloading = false;// = false;
-    boolean estAnnuler = false;
+    boolean downloading = false; // telechargement en cours
+    boolean estAnnuler = false; // si le telechargement est annuler ou pas
 
     private DownloadManager dm;
     private String path_file="";
@@ -70,9 +74,14 @@ public class MainActivity extends AppCompatActivity {
         afficher = (Button) findViewById(R.id.afficher);
         valider = (Button) findViewById(R.id.valider);
         url = (EditText) findViewById(R.id.url);
+        spinner = (Spinner) findViewById(R.id.spinner);
         supp = (Button) findViewById(R.id.supp);
         pb = (ProgressBar) findViewById(R.id.simpleProgressBar); // initiate the progress bar
         annuler = (Button) findViewById(R.id.annuler);
+        spinner.setOnItemSelectedListener(this);
+        updateSpinner();
+        //this.url.setText("");
+       // MySpinner msp = new MySpinner();
 
     }
 
@@ -158,14 +167,10 @@ public class MainActivity extends AppCompatActivity {
                         downloading = true;
                         checkLink(id);
                     }
-                } else {
+                } else
                     Toast.makeText(this, "Url invalide", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Log.d("PAS  de CO",":/");
+            } else
                 Toast.makeText(this, "No internet connexion", Toast.LENGTH_SHORT).show();
-            }
-
         }
     }
 
@@ -234,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
                                     startActivity(i);
                                     Toast.makeText(MainActivity.this, "Votre fic est bien enregistré dans la base !", Toast.LENGTH_LONG).show();
                                 }
+                                MainActivity.this.deleteLast();
                             } else {
                                 Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
                             }
@@ -271,4 +277,44 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this,SuppressionFicRss.class);
         startActivity(intent);
     }
+
+    void deleteLast(){ // supprimer la derniere date nbr de fils est > 10
+        Cursor cursor = this.access_donnees.getTableFile();
+        Log.e("Nbr elt dans la base ",cursor.getCount()+"");
+        if(cursor.getCount() > 10){
+            cursor.moveToFirst();
+            String lien = cursor.getString(cursor.getColumnIndex("lien"));
+            this.access_donnees.delete(lien);
+        }
+        Log.e("BEFORE SP ","toto");
+        updateSpinner();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        String item = parent.getItemAtPosition(position).toString();
+        this.url.setText(item);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        //this.url.setText("");
+    }
+
+   void updateSpinner(){
+       Cursor cursor = this.access_donnees.getTableFile();
+       int taille = cursor.getCount();
+        String [] tab_lien = new String [taille+1];
+        tab_lien[0] = "";
+        int i = 1;
+        while (cursor.moveToNext()){
+            String lien = cursor.getString(cursor.getColumnIndex("lien"));
+            tab_lien[i] = lien;
+            i++;
+        }
+        ArrayAdapter aa = new ArrayAdapter(this,android.R.layout.simple_spinner_item,tab_lien);
+        aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        this.spinner.setAdapter(aa);
+    }
+
 }

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class Base extends SQLiteOpenHelper {
 
 
-    public final static int VERSION = 9;
+    public final static int VERSION = 10;
 
     public final static String DB_NAME = "mplrss";
 
