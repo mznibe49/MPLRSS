@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class Base extends SQLiteOpenHelper {
 
 
-    public final static int VERSION = 10;
+    public final static int VERSION = 12;
 
     public final static String DB_NAME = "mplrss";
 
@@ -19,8 +19,11 @@ public class Base extends SQLiteOpenHelper {
     public final static String COLONNE_LIEN = "lien"; // lien du fichier
     public final static String COLONNE_ADRESSE = "adresse"; // lien de l'item dans le fichier
     public final static String COLONNE_DATE_MODIF = "derniere_modification";
+    public final static String COLONNE_FAVORIS = "favoris";
 
     public final static String TABLE_ITEM = "item";
+
+    //public final static String TABLE_FAVORIS = "favoris";
 
 
 
@@ -36,7 +39,14 @@ public class Base extends SQLiteOpenHelper {
             COLONNE_TITRE + " string, " +
             COLONNE_ADRESSE + " string primary key, " +
             COLONNE_DESCRIPTION + " text, " + // lien de l'item courant
-            COLONNE_DATE_MODIF + " string " + ");";
+            COLONNE_FAVORIS + " int " + ");";
+
+    /*public final static String CREATE_TABLE_FAVORIS = "create table " + TABLE_FAVORIS + "(" +
+            COLONNE_LIEN + " string primary key, " +
+            COLONNE_TITRE + " string, " +
+            COLONNE_DESCRIPTION + " text, " + // lien de l'item courant
+            COLONNE_DATE_MODIF + " string " + ");";*/
+
 
     private static Base ourInstance;
 

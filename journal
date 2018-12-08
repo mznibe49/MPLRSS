@@ -17,6 +17,8 @@ verification de date est faite
 
 "j ai ajouter un branch pr ProgBar avec thread"
 
+ajouter aux favoris , supprimer un fic en gardant les favoris ,  page des favoris
+
 ProgBar avec thread de bouton annuler fonctionne tres bien ! pas besoin de mettre dans une class apart !
 
 avant la fin : 
@@ -26,4 +28,8 @@ avant la fin :
 	parser les description avec <img/> et </br>
 
 spinner done !
+
+favoris fait, supp en laissant les fav fait, page de fav fait
+
+reste nettoyage du disque, searchView, fragment.
 	

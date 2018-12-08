@@ -11,6 +11,7 @@ public class WebViewActivity extends AppCompatActivity {
     String adresse;
     WebView webview;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

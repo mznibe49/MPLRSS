@@ -192,16 +192,10 @@ public class Parseur  {
                         case "link":
                             adresse = contenu_node;
                             break;
-                        case "pubDate":
-                            dm = contenu_node;
-                            break;
-                        case "lastBuildDate":
-                            dm = contenu_node;
-                            break;
                     }
                 }
             }
-            this.ac.ajoutItem(this.url_lien,adresse,titre,desc,dm);
+            this.ac.ajoutItem(this.url_lien,adresse,titre,desc,0);
         }
     }
 

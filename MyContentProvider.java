@@ -21,6 +21,9 @@ public class MyContentProvider extends ContentProvider {
     private static final int SUPP_FIC = 5;
     private static final int LIEN_INFO = 6;
     private static final int DATE_INFO = 7;
+    private static final int DESC_ITEM = 8;
+    private static final int SUPP_ITEM = 9;
+    private static final int FAVORIS = 10;
 
 
     private static final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -32,6 +35,10 @@ public class MyContentProvider extends ContentProvider {
         matcher.addURI(authority,"supprimeFic/*",SUPP_FIC);
         matcher.addURI(authority,"lienInfo/*",LIEN_INFO); // pour savoir si un lien existe ou pas
         matcher.addURI(authority,"dateInfo/*",DATE_INFO); // pour recup la date enregistrer
+        matcher.addURI(authority,"descItem/*",DESC_ITEM); // description d'un item
+        matcher.addURI(authority,"supprimeItem/*",SUPP_ITEM); // supp item
+        matcher.addURI(authority,"toFav",FAVORIS); // ajouter aux favoris
+
     }
 
 
@@ -44,12 +51,17 @@ public class MyContentProvider extends ContentProvider {
         int cpt = 0;
         int cpt2 = 0;
         SQLiteDatabase db= base.getReadableDatabase();
+        String selection2 = selection+" and favoris = 0"; // supprimer tout les item associer a ce fichier ou le favoris est a 0
         int code = matcher.match(uri);
         switch (code){
             case SUPP_FIC:
                 cpt = db.delete("fic_rss", selection, selectionArgs);
-                cpt2 = db.delete("item",selection,selectionArgs);
+                cpt2 = db.delete("item",selection2,selectionArgs);
                 Log.d("LES CPT : ",""+cpt+" "+cpt2);
+                break;
+            case SUPP_ITEM:
+                cpt = db.delete("item",selection,selectionArgs);
+                break;
         }
         return cpt;
     }
@@ -117,6 +129,9 @@ public class MyContentProvider extends ContentProvider {
             case DATE_INFO:
                 cursor = db.query("fic_rss",colonne,selection,selectionArgs,null,null,sortOrder);
                 break;
+            case DESC_ITEM:
+                cursor = db.query("item",colonne,selection,selectionArgs,null,null,sortOrder);
+                break;
             default:
                 return null;
         }
@@ -126,7 +141,19 @@ public class MyContentProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
+        SQLiteDatabase db = base.getWritableDatabase();
+        int code = matcher.match(uri); // trouver le code de cette uri
+        //String path="";
+        long id=0;
+        Log.d("CODE IN UPD ",""+code);
+        switch (code) {
+            case FAVORIS: // inserer des elt dans fic_rss
+                //path = "fic_rss";
+                id = db.update("item", values, selection,selectionArgs );
+                return (int)id;
+                //break;
+        }
+         // TODO: Implement this to handle requests to update one or more rows.
         throw new UnsupportedOperationException("Not yet implemented IN UPDATE");
     }
 }

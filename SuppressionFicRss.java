@@ -3,6 +3,7 @@ package com.example.simoz.mplrss;
 import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
@@ -21,6 +22,7 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
     SimpleCursorAdapter adapter;
     LoaderManager manager;
     private static final String authority = "fr.simo.bdprojet";
+    ListView list;
 
 
     @Override
@@ -28,7 +30,7 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_suppression_fic_rss);
 
-        //list = (ListView)findViewById(R.id.list);
+        list = (ListView)findViewById(R.id.listSupp);
         access_donnee = new AccessDonnees(this);
         Cursor cursor = access_donnee.getTableFile();
 
@@ -38,7 +40,7 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
                 new String[]{"titre"},
                 new int[]{android.R.id.text1});
 
-        setListAdapter(adapter);
+        list.setAdapter(adapter);
 
         manager = getLoaderManager(); //manager = getLoaderManager();
         manager.initLoader(0, null, this);
@@ -55,6 +57,10 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
             String msg = "le Fic Rss supprimé est  : "+c.getString(c.getColumnIndex("titre"));
             Toast toast = Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT);
             toast.show();
+            Intent intent = new Intent();
+            intent.putExtra("keyRes", "maj"); // pour maj le spinner
+            setResult(RESULT_OK, intent);
+            //finish();
         }
         manager.restartLoader(0,null, this);
     }
@@ -67,7 +73,6 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
                 .appendPath("fic_rss").build();
         return new CursorLoader(this, uri, new String[]{"_id", "nom"},
                 null, null, null);
-        //return null;
     }
 
     @Override

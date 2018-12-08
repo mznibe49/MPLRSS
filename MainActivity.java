@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.w3c.dom.Document;
@@ -48,8 +49,7 @@ import static android.app.PendingIntent.getActivity;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    Button remplir;
-    Button afficher;
+    Button favoris;
     Button valider;
     Button annuler;
     Button supp;
@@ -64,14 +64,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ProgressBar pb;
     Thread progBar;
 
+    final int SECOND_ACTIVITY_REQUEST_CODE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         access_donnees = new AccessDonnees(this);
-        remplir = (Button) findViewById(R.id.remplir);
-        afficher = (Button) findViewById(R.id.afficher);
+        favoris = (Button) findViewById(R.id.favoris);
         valider = (Button) findViewById(R.id.valider);
         url = (EditText) findViewById(R.id.url);
         spinner = (Spinner) findViewById(R.id.spinner);
@@ -80,8 +80,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         annuler = (Button) findViewById(R.id.annuler);
         spinner.setOnItemSelectedListener(this);
         updateSpinner();
-        //this.url.setText("");
-       // MySpinner msp = new MySpinner();
 
     }
 
@@ -95,11 +93,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     void valider(View button){
         String lien = this.url.getText().toString();
         if(lien.length() == 0){
-
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(this, "Champs vide  !", duration);
-            toast.show();
-
+         Toast.makeText(this, "Champs vide  !", Toast.LENGTH_SHORT).show();
         } else {
 
             boolean isConnected = isConnected();
@@ -253,29 +247,49 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
-    void remplirBase(View button){
+   /* void remplirBase(View button){
         try {
             access_donnees.init();
         } catch (Exception e){
             Log.d("ERR",e.getMessage());
         }
-    }
+    }*/
 
     void annulerT(View b){
         if(downloading) { // si tu annule et le telechargmnt est en cours
             estAnnuler = true;
             downloading = false;
+        } else {
+            Toast.makeText(MainActivity.this, "Aucun Téléchargement n'est en cours", Toast.LENGTH_LONG).show();
         }
     }
 
-    void afficherBase(View button){
-        Intent intent = new Intent(this,LecteurBase.class);
+    void favoris(View button){
+        Intent intent = new Intent(this,Favoris.class);
         startActivity(intent);
     }
 
     void suppFicRss(View button){
         Intent intent = new Intent(this,SuppressionFicRss.class);
-        startActivity(intent);
+        startActivityForResult(intent,SECOND_ACTIVITY_REQUEST_CODE);
+    }
+
+    // This method is called when the second activity finishes
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Check that it is the SecondActivity with an OK result
+        if (requestCode == SECOND_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+
+                // Get String data from Intent
+                String returnString = data.getStringExtra("keyRes");
+                if(returnString.equals("maj")){
+                    updateSpinner();
+                }
+            }
+        }
     }
 
     void deleteLast(){ // supprimer la derniere date nbr de fils est > 10
@@ -293,12 +307,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String item = parent.getItemAtPosition(position).toString();
-        this.url.setText(item);
+        //this.url.setText(item);
+        if(item.length() != 0) {
+            Intent i = new Intent(this, LecteurItem.class);
+            i.putExtra("lien", item);
+            startActivity(i);
+            this.spinner.setSelection(0);
+        }
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-        //this.url.setText("");
+        Toast.makeText(this, "Nthng selected ! ", Toast.LENGTH_SHORT).show();
     }
 
    void updateSpinner(){

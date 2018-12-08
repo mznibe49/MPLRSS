@@ -40,8 +40,16 @@
                 android:layout_height="wrap_content"
                 android:onClick="valider"
                 android:text="Valider" />
-
         <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Annuler le téléchargement"
+            android:id="@+id/annuler"
+            android:onClick="annulerT" />
+
+
+
+        <!--<Button
             android:id="@+id/remplir"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -53,21 +61,23 @@
             android:layout_height="wrap_content"
             android:text="Afficher la base de données"
             android:id="@+id/afficher"
-            android:onClick="afficherBase" />
+            android:onClick="afficherBase" /> -->
 
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Supprimer de la base de données"
+            android:text="Supprimer un RSS"
             android:id="@+id/supp"
             android:onClick="suppFicRss" />
 
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Annuler le téléchargement"
-            android:id="@+id/annuler"
-            android:onClick="annulerT" />
+            android:text="Mes favoris"
+            android:id="@+id/favoris"
+            android:onClick="favoris" />
+
+
 
 
 

@@ -14,6 +14,7 @@ import android.widget.SimpleCursorAdapter;
 
 public class LecteurBase extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 // pour lire les fichier dans la base apres faudra lire les items de chaque fichier
+
     AccessDonnees access_donnee;
     SimpleCursorAdapter adapter;
     LoaderManager manager;

@@ -11,7 +11,7 @@
     android:paddingTop="16dp"
     tools:context=".LecteurItem">
 
-    <LinearLayout
+    <!--<LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -31,6 +31,10 @@
 
 
 
-    </LinearLayout>
+    </LinearLayout>-->
+    <com.baoyz.swipemenulistview.SwipeMenuListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </android.support.constraint.ConstraintLayout>

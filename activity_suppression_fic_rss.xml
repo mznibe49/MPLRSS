@@ -14,13 +14,12 @@
         android:id="@android:id/empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Cliquez sur l'élément à modifier" />
+        android:text="Aucun Rss a supprimer" />
 
     <ListView
-        android:id="@android:id/list"
+        android:id="@+id/listSupp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:drawSelectorOnTop="false" />
-
 
 </LinearLayout>

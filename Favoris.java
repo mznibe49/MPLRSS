@@ -11,11 +11,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
@@ -25,45 +21,35 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 
-import java.util.ArrayList;
+public class Favoris extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>  {
 
-public class LecteurItem extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-
-    private String lien;
     AccessDonnees access_donnees;
     SimpleCursorAdapter adapter;
     LoaderManager manager;
-    SwipeMenuListView lv;
-    SwipeMenuItem favItem;
-
+    String favoris = "1";
     public final static String authority = "fr.simo.bdprojet";
-    private static final String TAG  = "LecteurItemActivity";
+    SwipeMenuListView lv;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lecteur_item);
+        setContentView(R.layout.activity_favoris);
+        lv = (SwipeMenuListView) findViewById(R.id.listFav);
 
-        lv = (SwipeMenuListView) findViewById(R.id.listView);
-
-        access_donnees = new AccessDonnees(this);
-        final Intent intent = getIntent();
-        this.lien = intent.getStringExtra("lien");
-        Cursor cursor = access_donnees.getItemsLinkedToRss(this.lien);
+        this.access_donnees = new AccessDonnees(this);
+        Cursor cursor = access_donnees.getFavItem();
 
         String [] nom_colonne = {"titre"}; // on suppose que qu'on on clicque sur la zone on vas sur le lien qui vas avec...
         int [] layout = {android.R.id.text1};
-        adapter= new SimpleCursorAdapter(this,
+        adapter = new SimpleCursorAdapter(this,
                 android.R.layout.simple_list_item_1,
                 cursor,
                 nom_colonne,
-                new int[]{android.R.id.text1});
-
+                layout);
         lv.setAdapter(adapter);
         manager = getLoaderManager(); //manager = getLoaderManager();
         manager.initLoader(0, null, this);
-
 
         SwipeMenuCreator creator = new SwipeMenuCreator() {
 
@@ -80,18 +66,11 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
                 menu.addMenuItem(openItem);
 
                 // create "delete" item
-                SwipeMenuItem deleteItem = new SwipeMenuItem(getApplicationContext());
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,0x3F, 0x25)));
-                deleteItem.setWidth(170);
-                deleteItem.setIcon(R.drawable.ic_delete);
-                menu.addMenuItem(deleteItem);
-
-                // create "favoris" item
-                favItem = new SwipeMenuItem(getApplicationContext());
-                favItem.setBackground(new ColorDrawable(Color.rgb(0xFF,0xFF, 0x0)));
-                favItem.setWidth(170);
-                favItem.setIcon(R.drawable.ic_favoris);
-                menu.addMenuItem(favItem);
+                SwipeMenuItem removeFavoris = new SwipeMenuItem(getApplicationContext());
+                removeFavoris.setBackground(new ColorDrawable(Color.rgb(0x41,0x69, 0xE1)));
+                removeFavoris.setWidth(170);
+                removeFavoris.setIcon(R.drawable.ic_removefav);
+                menu.addMenuItem(removeFavoris);
 
             }
         };
@@ -102,62 +81,45 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
             @Override
             public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
 
-                Cursor c = (Cursor) LecteurItem.this.adapter.getItem(position); // pour recuperer l'element selectionner
+                Cursor c = (Cursor) Favoris.this.adapter.getItem(position); // pour recuperer l'element selectionner
                 String adresse = c.getString(c.getColumnIndex("adresse"));
-                int favoris = LecteurItem.this.access_donnees.getItemFavoris(adresse);
+                int favoris = Favoris.this.access_donnees.getItemFavoris(adresse);
 
                 switch (index) {
                     case 0:
                         // open
-                        Intent i = new Intent(LecteurItem.this, DescPage.class);
+                        Intent i = new Intent(Favoris.this, DescPage.class);
                         i.putExtra("adresse", adresse);
                         startActivity(i);
                         break;
                     case 1:
-                        // delete
-                        LecteurItem.this.access_donnees.deleteIem(adresse);
-                        manager.restartLoader(0,null, LecteurItem.this);
+                        // remove from favs
+                        Favoris.this.access_donnees.changeToFav(adresse,0);
+                        Toast.makeText(Favoris.this, "Cet article n'est plus dans les favoris", Toast.LENGTH_LONG).show();
+                        manager.restartLoader(0,null, Favoris.this);
                         break;
-                    case 2:
-                        //ajouter a la table de favoris
-                        if(favoris == 0) {
-                            LecteurItem.this.access_donnees.changeToFav(adresse,1);
-                            Toast.makeText(LecteurItem.this, "Cet article est ajouté au favoris", Toast.LENGTH_LONG).show();
-                            //favItem.setBackground(new ColorDrawable(Color.rgb(0xFF,0xFF, 0x0)));
-                            //favItem.setWidth(170);
-                            //favItem.setIcon(R.drawable.ic_favoris);
-                        } else {
-                            LecteurItem.this.access_donnees.changeToFav(adresse,0);
-                            Toast.makeText(LecteurItem.this, "Cet article n'est plus dans les favoris", Toast.LENGTH_LONG).show();
-                            //favItem.setBackground(new ColorDrawable(Color.rgb(0x41,0x69, 0xE1)));
-                            //favItem.setWidth(170);
-                            //favItem.setIcon(R.drawable.ic_removefav);
-                        }
-
                 }
                 // false : close the menu; true : not close the menu
                 return false;
             }
         });
-    }
 
+    }
 
     protected void onListItemClick(ListView l, View v, int position, long id){
         Cursor c = (Cursor) this.adapter.getItem(position); // pour recuperer l'element selectionner
-        String adresse = c.getString(c.getColumnIndex("adresse"));
-        Toast.makeText(this, "go to  : " + " " + lv.getItemAtPosition(position) , Toast.LENGTH_LONG).show();
+        String titre = c.getString(c.getColumnIndex("titre"));
+        Toast.makeText(this, titre/*"go to  : " + " " + lv.getItemAtPosition(position)*/ , Toast.LENGTH_LONG).show();
         manager.restartLoader(0,null, this);
     }
-
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri.Builder builder = new Uri.Builder();
-        builder.scheme("content").authority(authority).appendPath("itemRss").appendPath(lien);
+        builder.scheme("content").authority(authority).appendPath("itemRss").appendPath(favoris);
         Uri uri = builder.build();
         return new CursorLoader(this, uri, new String[]{"_id","nom"},
-                "lien = ?", new String []{lien}, null);
+                "favoris = ?", new String[] {favoris}, null);
         //return null;
     }
 
