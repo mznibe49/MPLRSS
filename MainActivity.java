@@ -35,6 +35,7 @@ import org.xml.sax.InputSource;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -95,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if(lien.length() == 0){
          Toast.makeText(this, "Champs vide  !", Toast.LENGTH_SHORT).show();
         } else {
-
             boolean isConnected = isConnected();
             Log.d("Est connecté ? ",""+isConnected);
             if (isConnected) {
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         startActivity(i);
                                         Toast.makeText(MainActivity.this, "meme date des fic rss donc pas de modif", Toast.LENGTH_LONG).show();
                                     } else { // on supp l'ancien on ajoute le nv et puis on ouvre
-                                        MainActivity.this.access_donnees.delete(this.url_lien);
+                                        MainActivity.this.access_donnees.delete(cursor);
                                         parseur.ajouterDansFicRss(ficRssNode); // ajoute les element de la liste dans chaque table
                                         parseur.ajouterDansItem(itemNode);
                                         Intent i = new Intent(MainActivity.this, LecteurItem.class);
@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         };
         registerReceiver(receiver, filter);
+        cleanDevice(MainActivity.this.path_file);
     }
 
 
@@ -254,6 +255,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             Log.d("ERR",e.getMessage());
         }
     }*/
+
+   void suppFicRss(View button){
+       Intent intent = new Intent(this,SuppressionFicRss.class);
+       startActivityForResult(intent,SECOND_ACTIVITY_REQUEST_CODE);
+   }
 
     void annulerT(View b){
         if(downloading) { // si tu annule et le telechargmnt est en cours
@@ -267,11 +273,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     void favoris(View button){
         Intent intent = new Intent(this,Favoris.class);
         startActivity(intent);
-    }
-
-    void suppFicRss(View button){
-        Intent intent = new Intent(this,SuppressionFicRss.class);
-        startActivityForResult(intent,SECOND_ACTIVITY_REQUEST_CODE);
     }
 
     // This method is called when the second activity finishes
@@ -292,13 +293,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+    void cleanDevice(String path_file){
+        File f = null;
+        try {
+            f = new File(path_file);
+            f.delete();
+            Log.d("Device ","cleaned successfully");
+        } catch (Exception e){
+            Log.d("Err in CleanDevide ",e.getMessage());
+        }
+    }
+
     void deleteLast(){ // supprimer la derniere date nbr de fils est > 10
         Cursor cursor = this.access_donnees.getTableFile();
         Log.e("Nbr elt dans la base ",cursor.getCount()+"");
-        if(cursor.getCount() > 10){
+        if(cursor.getCount() > 5){
             cursor.moveToFirst();
-            String lien = cursor.getString(cursor.getColumnIndex("lien"));
-            this.access_donnees.delete(lien);
+            //String lien = cursor.getString(cursor.getColumnIndex("lien"));
+            this.access_donnees.delete(cursor);
         }
         Log.e("BEFORE SP ","toto");
         updateSpinner();
@@ -326,11 +338,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
        int taille = cursor.getCount();
         String [] tab_lien = new String [taille+1];
         tab_lien[0] = "";
-        int i = 1;
+        int i = tab_lien.length-1;
         while (cursor.moveToNext()){
             String lien = cursor.getString(cursor.getColumnIndex("lien"));
             tab_lien[i] = lien;
-            i++;
+            i--;
         }
         ArrayAdapter aa = new ArrayAdapter(this,android.R.layout.simple_spinner_item,tab_lien);
         aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

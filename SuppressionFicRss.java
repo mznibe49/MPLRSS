@@ -30,7 +30,7 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_suppression_fic_rss);
 
-        list = (ListView)findViewById(R.id.listSupp);
+        //list = getListView();
         access_donnee = new AccessDonnees(this);
         Cursor cursor = access_donnee.getTableFile();
 
@@ -40,7 +40,7 @@ public class SuppressionFicRss extends ListActivity implements LoaderManager.Loa
                 new String[]{"titre"},
                 new int[]{android.R.id.text1});
 
-        list.setAdapter(adapter);
+        setListAdapter(adapter);
 
         manager = getLoaderManager(); //manager = getLoaderManager();
         manager.initLoader(0, null, this);

@@ -16,6 +16,7 @@ Ajout bouton annuler telechargement qui fonctionne !
 verification de date est faite
 
 "j ai ajouter un branch pr ProgBar avec thread"
+nettoyage fait
 
 ajouter aux favoris , supprimer un fic en gardant les favoris ,  page des favoris
 
@@ -31,5 +32,6 @@ spinner done !
 
 favoris fait, supp en laissant les fav fait, page de fav fait
 
-reste nettoyage du disque, searchView, fragment.
+reste : voir la bd, nettoyage du disque, searchView, fragment.
+	ya err dans l ajout
 	

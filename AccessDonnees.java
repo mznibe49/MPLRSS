@@ -1,11 +1,15 @@
 package com.example.simoz.mplrss;
 
+import android.app.DownloadManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
+
+import java.io.File;
 
 public class AccessDonnees {
 
@@ -195,6 +199,17 @@ public class AccessDonnees {
         String where="lien = ?";
         String[] selection={arg};
         int cpt = resolver.delete(uri,where,selection);
+/*        String path = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+        String path_file = path.replace("file://", "");
+
+        Log.d("Path in del curs ",path_file);
+        File f = null;
+        try{
+            f = new File(path_file);
+            f.delete();
+        } catch (Exception e){
+            Log.d("Err in del curs ",e.getMessage());
+        }*/
         return cpt;
     }
 
@@ -212,6 +227,7 @@ public class AccessDonnees {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("content").authority(authority).appendPath("supprimeItem").appendPath(adresse);
         Uri uri = builder.build();
+
         String where="adresse = ?";
         String[] selection={adresse};
         int cpt = resolver.delete(uri,where,selection);
