@@ -40,6 +40,10 @@ public class Parseur  {
         eti = new ArrayList<Node>();
     }
 
+    public Parseur(){
+
+    }
+
     ArrayList<Node> getFicRssListNode(){
         return this.efr;
     }
@@ -60,9 +64,15 @@ public class Parseur  {
         Log.e("real path is : ", path);
         try {
             db = dbf.newDocumentBuilder();
-            document = db.parse(new File(path));
-            Log.e("IN DOC TRY", "enfin !");
-            return parseDocument(document);
+            File file = new File(path);
+            //if(file.exists()) {
+                document = db.parse(file);
+                //Log.d("Path dans CDevice ","-> "+path);
+                //Log.d("Msg ","Le Fichier Supprimer Dans le Tel "+file.delete());
+                //Log.e("IN DOC TRY", "enfin !");
+                //boolean res =
+                return parseDocument(document);
+            //}
         } catch (DOMException e){
             Log.d("DOCEXP in createDoc : ",e.getMessage());
         } catch (IOException e){
@@ -134,9 +144,9 @@ public class Parseur  {
                 case "title":
                     titre = contenu_node;
                     break;
-                case "description":
+                /*case "description":
                     desc = contenu_node;
-                    break;
+                    break;*/
                 case "link":
                     lien = this.url_lien;
                     break;
@@ -148,7 +158,7 @@ public class Parseur  {
                     break;
             }
         }
-        this.ac.ajoutRss(lien,titre,desc,dm);
+        this.ac.ajoutRss(lien,titre,dm);
 
     }
 
@@ -234,7 +244,7 @@ public class Parseur  {
             String ancieneDate = this.ac.getDateFromRss(this.url_lien);
             Date ancDate = convertirDate(ancieneDate);
             Log.e("Print Date ","anc date : "+ancDate.getTime()+" nv date "+nvDate.getTime());
-            if(nvDate.getTime() == ancDate.getTime()) return true;
+            if(nvDate.compareTo(ancDate) == 0) return true;
         } catch (Exception e){
             Log.e("ERR in CheckDate",e.getMessage());
         }

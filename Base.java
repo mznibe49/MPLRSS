@@ -7,13 +7,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class Base extends SQLiteOpenHelper {
 
 
-    public final static int VERSION = 13;
+    public final static int VERSION = 16;
 
     public final static String DB_NAME = "mplrss";
 
     public final static String TABLE_FIC_RSS = "fic_rss";
 
-    //public final static String COLONNE_KEY = "id";
+    public final static String COLONNE_KEY = "id";
     public final static String COLONNE_TITRE = "titre";
     public final static String COLONNE_DESCRIPTION = "description";
     public final static String COLONNE_LIEN = "lien"; // lien du fichier
@@ -28,16 +28,17 @@ public class Base extends SQLiteOpenHelper {
 
 
     public final static String CREATE_TABLE_FIC_RSS = "create table " + TABLE_FIC_RSS + "(" +
-            //COLONNE_KEY +  " integer primary key autoincrement, " +
-            COLONNE_LIEN + " string primary key, " +
+            COLONNE_KEY +  " integer primary key autoincrement, " +
+            COLONNE_LIEN + " string , " +
             COLONNE_TITRE + " string, " +
-            COLONNE_DESCRIPTION + " text, " +
+            //COLONNE_DESCRIPTION + " text, " +
             COLONNE_DATE_MODIF + " string " + ");";
 
     public final static String CREATE_TABLE_ITEM = "create table " + TABLE_ITEM + "(" +
+            COLONNE_KEY +  " integer primary key autoincrement, " +
             COLONNE_LIEN + " string references fic_rss, " + // le lien du fichier
             COLONNE_TITRE + " string, " +
-            COLONNE_ADRESSE + " string primary key, " +
+            COLONNE_ADRESSE + " string, " +
             COLONNE_DESCRIPTION + " text, " + // lien de l'item courant
             COLONNE_FAVORIS + " int " + ");";
 

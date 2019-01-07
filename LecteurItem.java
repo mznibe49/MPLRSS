@@ -2,6 +2,8 @@ package com.example.simoz.mplrss;
 
 import android.app.ListActivity;
 import android.app.LoaderManager;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
@@ -11,7 +13,11 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -34,7 +40,6 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
     SimpleCursorAdapter adapter;
     LoaderManager manager;
     SwipeMenuListView lv;
-    SwipeMenuItem favItem;
 
     public final static String authority = "fr.simo.bdprojet";
     private static final String TAG  = "LecteurItemActivity";
@@ -47,16 +52,21 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
 
         lv = (SwipeMenuListView) findViewById(R.id.listView);
 
+
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         access_donnees = new AccessDonnees(this);
         final Intent intent = getIntent();
         this.lien = intent.getStringExtra("lien");
-        Cursor cursor = access_donnees.getItemsLinkedToRss(this.lien);
+        //Cursor cursor = access_donnees.getItemsLinkedToRss(this.lien);
 
         String [] nom_colonne = {"titre"}; // on suppose que qu'on on clicque sur la zone on vas sur le lien qui vas avec...
         int [] layout = {android.R.id.text1};
         adapter= new SimpleCursorAdapter(this,
                 android.R.layout.simple_list_item_1,
-                cursor,
+                null,
                 nom_colonne,
                 new int[]{android.R.id.text1});
 
@@ -87,7 +97,7 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
                 menu.addMenuItem(deleteItem);
 
                 // create "favoris" item
-                favItem = new SwipeMenuItem(getApplicationContext());
+                SwipeMenuItem favItem = new SwipeMenuItem(getApplicationContext());
                 favItem.setBackground(new ColorDrawable(Color.rgb(0xFF,0xFF, 0x0)));
                 favItem.setWidth(170);
                 favItem.setIcon(R.drawable.ic_favoris);
@@ -111,11 +121,13 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
                         // open
                         Intent i = new Intent(LecteurItem.this, DescPage.class);
                         i.putExtra("adresse", adresse);
+                        i.putExtra("BackPage","l");
                         startActivity(i);
                         break;
                     case 1:
                         // delete
                         LecteurItem.this.access_donnees.deleteIem(adresse);
+                        Toast.makeText(LecteurItem.this, "article supprimer", Toast.LENGTH_LONG).show();
                         manager.restartLoader(0,null, LecteurItem.this);
                         break;
                     case 2:
@@ -123,15 +135,9 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
                         if(favoris == 0) {
                             LecteurItem.this.access_donnees.changeToFav(adresse,1);
                             Toast.makeText(LecteurItem.this, "Cet article est ajouté au favoris", Toast.LENGTH_LONG).show();
-                            //favItem.setBackground(new ColorDrawable(Color.rgb(0xFF,0xFF, 0x0)));
-                            //favItem.setWidth(170);
-                            //favItem.setIcon(R.drawable.ic_favoris);
                         } else {
                             LecteurItem.this.access_donnees.changeToFav(adresse,0);
                             Toast.makeText(LecteurItem.this, "Cet article n'est plus dans les favoris", Toast.LENGTH_LONG).show();
-                            //favItem.setBackground(new ColorDrawable(Color.rgb(0x41,0x69, 0xE1)));
-                            //favItem.setWidth(170);
-                            //favItem.setIcon(R.drawable.ic_removefav);
                         }
 
                 }
@@ -141,6 +147,26 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
         });
     }
 
+    /*@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        //MenuItem searchItem= menu.findItem(R.id.search_item);
+        /*SearchManager searchManager= (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView= (SearchView) searchItem.getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(this.getComponentName()));*/
+      //  return true;
+    //}
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
+        switch (item.getItemId()){
+            case android.R.id.home:
+                finish();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     protected void onListItemClick(ListView l, View v, int position, long id){
         Cursor c = (Cursor) this.adapter.getItem(position); // pour recuperer l'element selectionner
@@ -156,7 +182,7 @@ public class LecteurItem extends AppCompatActivity implements LoaderManager.Load
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("content").authority(authority).appendPath("itemRss").appendPath(lien);
         Uri uri = builder.build();
-        return new CursorLoader(this, uri, new String[]{"_id","nom"},
+        return new CursorLoader(this, uri, new String[]{"_id","titre"},
                 "lien = ?", new String []{lien}, null);
         //return null;
     }

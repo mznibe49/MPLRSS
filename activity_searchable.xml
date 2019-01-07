@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Favoris">
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    tools:context=".Searchable">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -24,13 +18,16 @@
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-
     <com.baoyz.swipemenulistview.SwipeMenuListView
-        android:id="@+id/supp"
+        android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    </LinearLayout>
+    <!-- <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:drawSelectorOnTop="false" /> -->
 
 
 </android.support.constraint.ConstraintLayout>

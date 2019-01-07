@@ -1,6 +1,8 @@
 package com.example.simoz.mplrss;
 
-import android.annotation.SuppressLint;
+import android.app.SearchManager;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,11 +13,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.ParcelFileDescriptor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,30 +25,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import static android.app.DownloadManager.COLUMN_LOCAL_FILENAME;
-import static android.app.PendingIntent.getActivity;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -80,9 +64,41 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         pb = (ProgressBar) findViewById(R.id.simpleProgressBar); // initiate the progress bar
         annuler = (Button) findViewById(R.id.annuler);
         spinner.setOnItemSelectedListener(this);
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        //this.access_donnees.deleteAfterMin(1);
         updateSpinner();
-
+        //this.access_donnees.deleteAfterMin(1);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        MenuItem searchItem= menu.findItem(R.id.search_item);
+        SearchManager searchManager= (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView= (SearchView) searchItem.getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(this.getComponentName()));
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
+        switch (item.getItemId()){
+            case R.id.favoris:
+                intent = new Intent(this,Favoris.class);
+                startActivity(intent);
+                return true;
+            case R.id.supp:
+                intent = new Intent(this,SuppressionFicRss.class);
+                startActivityForResult(intent,SECOND_ACTIVITY_REQUEST_CODE);
+                return true;
+            //case R.id.search_item:
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     public boolean isConnected(){
         ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -202,8 +218,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             }
                             Log.d("PATH !!! : ", path);
                             MainActivity.this.path_file = path.replace("file://", "");
-
                             Parseur parseur = new Parseur(MainActivity.this.path_file,this.url_lien,MainActivity.this.access_donnees);
+                            //cleanDevice(MainActivity.this.path_file);
                             boolean bienParser = parseur.lunch();
                             if(bienParser){
                                 ArrayList<Node> ficRssNode = parseur.getFicRssListNode();
@@ -217,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         startActivity(i);
                                         Toast.makeText(MainActivity.this, "meme date des fic rss donc pas de modif", Toast.LENGTH_LONG).show();
                                     } else { // on supp l'ancien on ajoute le nv et puis on ouvre
-                                        MainActivity.this.access_donnees.delete(cursor);
+                                        MainActivity.this.access_donnees.delete(this.url_lien);
                                         parseur.ajouterDansFicRss(ficRssNode); // ajoute les element de la liste dans chaque table
                                         parseur.ajouterDansItem(itemNode);
                                         Intent i = new Intent(MainActivity.this, LecteurItem.class);
@@ -233,10 +249,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     startActivity(i);
                                     Toast.makeText(MainActivity.this, "Votre fic est bien enregistré dans la base !", Toast.LENGTH_LONG).show();
                                 }
-                                MainActivity.this.deleteLast();
+                                MainActivity.this.updateSpinner();
                             } else {
                                 Toast.makeText(MainActivity.this, "Url invalide", Toast.LENGTH_LONG).show();
                             }
+                            cleanDevice(MainActivity.this.path_file);
                         }
                         cursor.close();
                     }
@@ -244,7 +261,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         };
         registerReceiver(receiver, filter);
-        cleanDevice(MainActivity.this.path_file);
     }
 
 
@@ -254,12 +270,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         } catch (Exception e){
             Log.d("ERR",e.getMessage());
         }
-    }*/
+    }
 
    void suppFicRss(View button){
        Intent intent = new Intent(this,SuppressionFicRss.class);
        startActivityForResult(intent,SECOND_ACTIVITY_REQUEST_CODE);
-   }
+   }*/
 
     void annulerT(View b){
         if(downloading) { // si tu annule et le telechargmnt est en cours
@@ -270,10 +286,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    void favoris(View button){
+    /*void favoris(View button){
         Intent intent = new Intent(this,Favoris.class);
         startActivity(intent);
-    }
+    }*/
 
     // This method is called when the second activity finishes
     @Override
@@ -294,17 +310,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     void cleanDevice(String path_file){
-        File f = null;
         try {
-            f = new File(path_file);
-            f.delete();
-            Log.d("Device ","cleaned successfully");
+            File f = new File(path_file);
+            Log.d("Device ","Avant if existe");
+            Log.d("Path dans CDevice ","-> "+this.path_file);
+            if(f.exists()){
+                Log.d("Msg ","Le Fichier Existe Dans le Tel");
+                Log.d("Msg ","Le Fichier Supprimer Dans le Tel "+f.delete());
+            }
+            Log.d("Device ","Apres if existe");
         } catch (Exception e){
             Log.d("Err in CleanDevide ",e.getMessage());
         }
     }
 
-    void deleteLast(){ // supprimer la derniere date nbr de fils est > 10
+    /*void deleteLast(){ // supprimer la derniere date nbr de fils est > 10
         Cursor cursor = this.access_donnees.getTableFile();
         Log.e("Nbr elt dans la base ",cursor.getCount()+"");
         if(cursor.getCount() > 5){
@@ -314,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         Log.e("BEFORE SP ","toto");
         updateSpinner();
-    }
+    }*/
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

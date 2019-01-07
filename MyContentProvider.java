@@ -116,6 +116,7 @@ public class MyContentProvider extends ContentProvider {
         switch (code){
             case BASE_FIC_RSS:  // tout fic_rss
                 cursor = db.query("fic_rss",colonne,selection,selectionArgs,null,null,sortOrder);
+                Log.d("Number of curs ",cursor.getCount()+"");
                 break;
             case BASE_ITEM: // tout item
                 cursor = db.query("item",colonne,selection,selectionArgs,null,null,sortOrder);

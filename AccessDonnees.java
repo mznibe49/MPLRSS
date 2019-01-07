@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.Date;
 
 public class AccessDonnees {
 
@@ -29,12 +30,12 @@ public class AccessDonnees {
         resolver = context.getContentResolver();
     }
 
-    public void ajoutRss(String lien, String titre,String description, String dm){
+    public void ajoutRss(String lien, String titre, String dm){
 
         ContentValues values = new ContentValues();
         values.put(COLONNE_LIEN,lien);
         values.put(COLONNE_TITRE,titre);
-        values.put(COLONNE_DESCRIPTION,description);
+        //values.put(COLONNE_DESCRIPTION,description);
         values.put(COLONNE_DATE_MODIF,dm);
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("content").authority(authority).appendPath("fic_rss");
@@ -62,9 +63,9 @@ public class AccessDonnees {
         return resolver.query(uri,null,null,null,null);
     }
 
-    //Rss : lien,titre,desc,dm
+    //Rss : lien,titre,dm
     //Item : lien,adresse,titre,desc,dm
-    public void init(){
+   /* public void init(){
         ajoutRss("https://www.lemonde.fr/rss/une.xml",
                 "Le Monde.fr - Actualités et Infos en France et dans le monde",
                 "Le Monde.fr - 1er site d'information. Les articles du journal et toute l'actualité en continu : International, France, Société, Economie, Culture, Environnement, Blogs ...",
@@ -106,7 +107,7 @@ public class AccessDonnees {
                 "Depuis le 8 novembre, la Californie est ravagée par des incendies meurtriers. Sur les réseaux sociaux, les stars habitant la région comme Will Smith, Robin Thicke ou les Kardashian ont médiatisé leurs évacuations.",
                 0);
         //ajoutDonnees();
-    }
+    }*/
 
     public Cursor getItemsLinkedToRss(String lien){ // recuperer les item qui ont un lien commun
         Uri.Builder builder = new Uri.Builder();
@@ -116,21 +117,6 @@ public class AccessDonnees {
         String selection="lien = ?";
         String [] args = {lien};
         Cursor cursor = resolver.query(uri, null, selection, args,null);;
-        /*try {
-            cursor = resolver.query(uri, null, selection, args,null);
-            Log.d("MSG","AVANT LE WHILE");
-            while (cursor.moveToNext()) {
-                //Log.d("Pere","lien");
-                //Log.d("MSG","DANS LE WHILE");
-                //Log.d("Fils de Lien au dessus ",cursor.getString(cursor.getColumnIndex(COLONNE_ADRESSE)));
-                //Log.d("Case Favoris ",""+cursor.getString(cursor.getColumnIndex(COLONNE_FAVORIS)));
-            }
-            Log.d("MSG","APRES LE WHILE");
-
-        } catch (Exception e){
-            Log.d("ERR getItem",e.getMessage());
-        }*/
-
         return cursor;
     }
 
@@ -160,7 +146,7 @@ public class AccessDonnees {
     }
 
 
-    public Cursor getItems(){
+    /*public Cursor getItems(){
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("content").authority(authority).appendPath("item");
         Uri uri = builder.build();
@@ -176,11 +162,19 @@ public class AccessDonnees {
         String [] s_args = {"1"};
         Cursor cursor = resolver.query(uri, null, selection, s_args,null);
         return cursor;
+    }*/
+
+    public Cursor getSearchableResult(String tmp){
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("content").authority(authority).appendPath("itemRss").appendPath(tmp);
+        Uri uri = builder.build();
+        String selection = "titre LIKE '%"+tmp+"%' or description LIKE '%"+tmp+"%' ";
+        Cursor cursor = resolver.query(uri, null, selection, null,null);
+        return cursor;
     }
 
     boolean isExistingLink(String lien){
         Uri.Builder builder = new Uri.Builder();
-        //String arg = cursor.getString(cursor.getColumnIndex("lien"));
         Log.d("Lien in EXISTINGLING",""+lien);
         builder.scheme("content").authority(authority).appendPath("lienInfo").appendPath(lien);
         Uri uri = builder.build();
@@ -191,6 +185,23 @@ public class AccessDonnees {
         return false; // cmt je fait cursor.close ici O.o
     }
 
+    String getLinkFromItem(String adresse){ // recuperer le lien d'un item a partir de l adresse de l'item
+        Uri.Builder builder = new Uri.Builder();
+        //Log.d("Lien in EXISTINGLING",""+lien);
+        builder.scheme("content").authority(authority).appendPath("itemRss").appendPath(adresse);
+        Uri uri = builder.build();
+        String selection="adresse = ?";
+        String[] args={adresse};
+        Cursor cursor = resolver.query(uri, null, selection, args,null);
+        String lien = "";
+        if(cursor.moveToFirst()){
+            lien = cursor.getString(cursor.getColumnIndex(COLONNE_LIEN));
+            cursor.close();
+        }
+        cursor.close();
+        return lien;
+    }
+
     public int delete(Cursor cursor){ // delete with cursor from loader  -  dans le SuppAc
         Uri.Builder builder = new Uri.Builder();
         String arg = cursor.getString(cursor.getColumnIndex("lien"));
@@ -199,18 +210,31 @@ public class AccessDonnees {
         String where="lien = ?";
         String[] selection={arg};
         int cpt = resolver.delete(uri,where,selection);
-/*        String path = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-        String path_file = path.replace("file://", "");
-
-        Log.d("Path in del curs ",path_file);
-        File f = null;
-        try{
-            f = new File(path_file);
-            f.delete();
-        } catch (Exception e){
-            Log.d("Err in del curs ",e.getMessage());
-        }*/
         return cpt;
+    }
+
+    public int deleteAfterMin(int min){
+        /*Uri.Builder builder = new Uri.Builder();
+        builder.scheme("content").authority(authority).appendPath("supprimeFic").appendPath(""+min);
+        Uri uri = builder.build();*/
+        Cursor cursor = getTableFile();
+        Parseur p = new Parseur();
+        long minute = min * 60000; // 60 sec = 60k msec ou min = 1
+        while(cursor.moveToNext()){
+            String date = cursor.getString(cursor.getColumnIndex(COLONNE_DATE_MODIF));
+            Date d = p.convertirDate(date);
+            String lien = cursor.getString(cursor.getColumnIndex(COLONNE_LIEN));
+            Date now = new Date();
+            Log.d("date from table rss ",""+d.getTime());
+            Log.d("date from now ",now.getTime()+"");
+            long time =  now.getTime() - d.getTime();
+            Log.d("date from time ",""+time);
+            if( time > minute){
+                Log.d("date from inside ","condition "+minute);
+                delete(lien);
+            }
+        }
+        return -1;
     }
 
     public int delete(String lien){ // delete with link from bcr  -  dans le MainAc
@@ -241,8 +265,11 @@ public class AccessDonnees {
         String where="lien = ?";
         String[] selection={url};
         Cursor cursor = resolver.query(uri,null,where,selection,null);
-        cursor.moveToFirst();
-        String date = cursor.getString(cursor.getColumnIndex(COLONNE_DATE_MODIF));
+        String date = "none";
+        if(cursor.moveToFirst()){
+            date = cursor.getString(cursor.getColumnIndex(COLONNE_DATE_MODIF));
+            cursor.close();
+        }
         cursor.close();
         return date;
     }
