@@ -1,0 +1,61 @@
+package com.example.andressito.revision;
+
+import android.content.Intent;
+import android.content.res.Resources;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+public class MainActivity2 extends AppCompatActivity {
+    RadioGroup radioGroup;
+    RadioButton fr;
+    RadioButton en;
+    Spinner spinner;
+    String che;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        radioGroup = findViewById(R.id.radioGroupe);
+        fr= findViewById(R.id.radioFr);
+        en= findViewById(R.id.radioEn);
+        spinner = findViewById(R.id.spinnerId);
+        Resources resources = getResources();
+        final String[] colorEn= resources.getStringArray(R.array.color_en);
+        final String[] colorFr= resources.getStringArray(R.array.color_fr);
+        final ArrayAdapter<String> adapterEn = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,colorEn);
+        final ArrayAdapter<String> adapterFr = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,colorFr);
+        spinner.setAdapter(adapterFr);
+        che="fr";
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton rEnCours=findViewById(checkedId);
+                if(rEnCours.getId()==R.id.radioFr){
+                    spinner.setAdapter(adapterFr);
+                    che="fr";
+                    Toast.makeText(getApplicationContext(),spinner.getSelectedItem().toString(),Toast.LENGTH_SHORT).show();
+                }else{
+                    spinner.setAdapter(adapterEn);
+                    che="en";
+                    Toast.makeText(getApplicationContext(),spinner.getSelectedItem().toString(),Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    public void ajouter(View view) {
+        Intent ver = new Intent(this,AutreActivity.class);
+        ver.putExtra("mot",spinner.getSelectedItemPosition());
+        if(che.equals("fr"))
+            ver.putExtra("lang","fr");
+        else
+            ver.putExtra("lang","en");
+        startActivity(ver);
+    }
+}
